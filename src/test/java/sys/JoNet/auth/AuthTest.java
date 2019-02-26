@@ -1,5 +1,6 @@
 package sys.JoNet.auth;
 
+import sys.JoNet.utils.AttachedResources;
 import sys.JoNet.utils.Environment;
 
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +18,10 @@ class AuthTest {
 
     public AuthTest() throws Exception {
         Environment environment = new Environment();
-        auth = new Auth(environment);
+        AttachedResources attachedResources = new AttachedResources(
+                                            new String[] {"SYSTEM_KEY", "USERS_DB"}, "jonet",
+                                            environment.getEnvar("JONET_ENV"));
+        auth = new Auth(attachedResources);
 
         JONET_ENV = System.getenv("JONET_ENV");
         SYSTEM_KEY = auth.fetchSystemKey();

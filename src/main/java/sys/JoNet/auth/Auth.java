@@ -1,6 +1,6 @@
 package sys.JoNet.auth;
 
-import sys.JoNet.utils.Environment;
+import sys.JoNet.utils.AttachedResources;
 
 import software.amazon.awssdk.services.secretsmanager.*;
 import software.amazon.awssdk.services.secretsmanager.model.*;
@@ -19,11 +19,11 @@ import java.util.Date;
 
 class Auth {
 
-    final String JONET_ENV;
+    final AttachedResources attachedResources;
     final String SYSTEM_KEY;
 
-    public Auth(Environment environment) {
-        JONET_ENV = environment.getEnvar("JONET_ENV");
+    public Auth(AttachedResources attachedResources) {
+        this.attachedResources = attachedResources;
         SYSTEM_KEY = fetchSystemKey();
     }
 
@@ -37,7 +37,7 @@ class Auth {
 
         // Create a request to get the user record from the database
         GetItemRequest userRecordRequest = GetItemRequest.builder()
-            .tableName("JoNet_" + JONET_ENV + "_users")
+            .tableName(attachedResources.getCanonicalName("USERS_DB"))
             .key(Map.of("user", AttributeValue.builder()
                                 .s(username).build()))
             .build();
@@ -72,12 +72,12 @@ class Auth {
     // The system key is used for signing and verifying user JWTs.
     String fetchSystemKey() {
         SecretsManagerClient client  = SecretsManagerClient.builder().build();
+        String keyCName = attachedResources.getCanonicalName("SYSTEM_KEY");
         
         // Create and send a request to get the secret value.
-        String secretName = "JoNet_" + JONET_ENV + "_system_key";
         GetSecretValueRequest request = GetSecretValueRequest
                                           .builder()
-                                          .secretId(secretName)
+                                          .secretId(keyCName)
                                           .build();
         GetSecretValueResponse response = client.getSecretValue(request);
 
