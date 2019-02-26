@@ -1,5 +1,7 @@
 package sys.JoNet.auth;
 
+import sys.JoNet.utils.Environment;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -11,9 +13,11 @@ class AuthTest {
 
     final String JONET_ENV;
     final String SYSTEM_KEY;
+    final Auth auth;
 
-    public AuthTest() {
-        Auth auth = new Auth();
+    public AuthTest() throws Exception {
+        Environment environment = new Environment();
+        auth = new Auth(environment);
 
         JONET_ENV = System.getenv("JONET_ENV");
         SYSTEM_KEY = auth.fetchSystemKey();
@@ -27,8 +31,6 @@ class AuthTest {
     @Test
     @DisplayName("Should log a user with valid credentials in")
     void passLoginOnGoodCredentials() throws AuthException {
-        Auth auth = new Auth();
-        
         String encodedToken = auth.loginUser("joann.arosemena@gmail.com", "password123");
         
         Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
@@ -43,8 +45,6 @@ class AuthTest {
     @Test
     @DisplayName("Retrieve the JoNet system key from the secret manager")
     void fetchSystemKey() {
-        Auth auth = new Auth();
-        
         auth.fetchSystemKey();
     }
 

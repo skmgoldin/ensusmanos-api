@@ -1,5 +1,7 @@
 package sys.JoNet.auth;
 
+import sys.JoNet.utils.Environment;
+
 import software.amazon.awssdk.services.secretsmanager.*;
 import software.amazon.awssdk.services.secretsmanager.model.*;
 import software.amazon.awssdk.services.dynamodb.*;
@@ -20,8 +22,8 @@ class Auth {
     final String JONET_ENV;
     final String SYSTEM_KEY;
 
-    public Auth() {
-        JONET_ENV = System.getenv("JONET_ENV");
+    public Auth(Environment environment) {
+        JONET_ENV = environment.getEnvar("JONET_ENV");
         SYSTEM_KEY = fetchSystemKey();
     }
 
