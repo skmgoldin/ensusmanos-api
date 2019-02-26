@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * environment.
  *
  * Canonical names should be in the format
- * <application>.<resource>:<environment> and satisfy the regex
+ * <application>.<resource>.<environment> and satisfy the regex
  * [a-z0-9]+[.][a-z0-9_]+[:][a-z0-9]+
  */
 public class AttachedResources {
@@ -40,14 +40,14 @@ public class AttachedResources {
      */
     public AttachedResources(String[] resourceReferenceNames,
             String applicationPrefix, String envPostfix) {
-        applicationPrefix = applicationPrefix;
-        envPostfix = envPostfix;
+        this.applicationPrefix = applicationPrefix;
+        this.envPostfix = envPostfix;
 
         for(String referenceName : resourceReferenceNames) {
             String resourceCanonicalName = new String()
                                                .concat(applicationPrefix.toLowerCase())
                                                .concat("." + referenceName.toLowerCase())
-                                               .concat(":" + envPostfix.toLowerCase());
+                                               .concat("." + envPostfix.toLowerCase());
 
             attachedResources.put(referenceName, resourceCanonicalName);
         }

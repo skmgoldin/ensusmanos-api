@@ -37,14 +37,14 @@ class AttachedResourcesTest {
         for(String referenceName : referenceNames) {
            String canonicalName = attachedResources.getCanonicalName(referenceName); 
 
-           Assertions.assertTrue(canonicalName.matches("[a-z0-9]+[.][a-z0-9_]+[:][a-z0-9]+"));
+           Assertions.assertTrue(canonicalName.matches("[a-z0-9]+[.][a-z0-9_]+[.][a-z0-9]+"));
 
            // Do a sanity check by explicitly constructing a canonical value
            // we know should exist
            if(referenceName.equals("SYSTEM_KEY")) {
                String sanityCheckValue = new String()
                                          .concat("jonet.system_key")
-                                         .concat(":" + environment.getEnvar("JONET_ENV"));
+                                         .concat("." + environment.getEnvar("JONET_ENV"));
 
                Assertions.assertTrue(canonicalName.equals(sanityCheckValue));
            }
