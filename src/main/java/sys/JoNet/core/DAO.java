@@ -1,5 +1,3 @@
 package sys.JoNet.core;
 
-class DAO {
-
-}
+class DAO {}
