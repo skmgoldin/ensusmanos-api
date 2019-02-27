@@ -17,6 +17,7 @@ dependencies {
     implementation("com.auth0:java-jwt:3.7.0")
     implementation("software.amazon.awssdk:secretsmanager:2.4.12")
     implementation("software.amazon.awssdk:dynamodb:2.4.12")
+    implementation("software.amazon.awssdk:kms:2.4.12")
     implementation("com.google.guava:guava:27.0.1-jre")
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.4.0")
