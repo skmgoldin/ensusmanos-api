@@ -16,13 +16,12 @@ import sys.JoNet.utils.AttachedResources;
 
 class Auth {
 
-  final AttachedResources attachedResources;
-  final String SYSTEM_KEY;
-
-  public Auth(AttachedResources attachedResources) {
-    this.attachedResources = attachedResources;
-    SYSTEM_KEY = fetchSystemKey();
-  }
+  private static final String[] resourceRefNames = {"SYSTEM_KEY", "USERS_DB"};
+  private static final String appName = "jonet";
+  private static final String env = System.getenv("JONET_ENV");
+  private static AttachedResources attachedResources =
+      new AttachedResources(resourceRefNames, appName, env);
+  private static String SYSTEM_KEY = fetchSystemKey();
 
   protected String loginUser(String username, String secret) throws AuthException {
     DynamoDbClient userDb = DynamoDbClient.create();
@@ -40,7 +39,7 @@ class Auth {
     // Send the record request and parse out the stored secretHash for the user
     String storedSecretHash = userDb.getItem(userRecordRequest).item().get("secretHash").s();
 
-    String token = null;
+    String token = null; // NOPMD
     if (secretHash.equals(storedSecretHash)) {
       // Only Jo-Ann should be an admin
       boolean isJoAnn = username.equals("joann.arosemena@gmail.com") ? true : false;
@@ -61,7 +60,7 @@ class Auth {
   }
 
   // The system key is used for signing and verifying user JWTs.
-  String fetchSystemKey() {
+  static String fetchSystemKey() {
     SecretsManagerClient client = SecretsManagerClient.builder().build();
     String keyCName = attachedResources.getCanonicalName("SYSTEM_KEY");
 

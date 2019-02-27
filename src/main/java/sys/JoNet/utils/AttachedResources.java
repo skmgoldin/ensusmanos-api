@@ -3,6 +3,7 @@ package sys.JoNet.utils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * The AttachedResources class abstracts away "canonical" names for attached resources (such as
@@ -13,10 +14,10 @@ import java.util.List;
  * production environment.
  *
  * <p>Canonical names should be in the format <application>.<resource>.<environment> and satisfy the
- * regex [a-z0-9]+[.][a-z0-9_]+[:][a-z0-9]+
+ * regex [a-z0-9]+[.][a-z0-9_]+[.][a-z0-9]+
  */
 public class AttachedResources {
-  private HashMap<String, String> attachedResources = new HashMap();
+  private static HashMap<String, String> refNameToCName = new HashMap();
 
   /**
    * The constructor must be passed an application prefix and an environmental postfix from its
@@ -34,19 +35,19 @@ public class AttachedResources {
     for (String referenceName : resourceReferenceNames) {
       String resourceCanonicalName =
           ""
-              .concat(applicationPrefix.toLowerCase())
-              .concat("." + referenceName.toLowerCase())
-              .concat("." + envPostfix.toLowerCase());
+              .concat(applicationPrefix.toLowerCase(Locale.US))
+              .concat("." + referenceName.toLowerCase(Locale.US))
+              .concat("." + envPostfix.toLowerCase(Locale.US));
 
-      attachedResources.put(referenceName, resourceCanonicalName);
+      refNameToCName.put(referenceName, resourceCanonicalName);
     }
   }
 
   public String getCanonicalName(String referenceName) {
-    return attachedResources.get(referenceName);
+    return refNameToCName.get(referenceName);
   }
 
   public List<String> getReferenceNames() {
-    return new ArrayList(attachedResources.keySet());
+    return new ArrayList(refNameToCName.keySet());
   }
 }
