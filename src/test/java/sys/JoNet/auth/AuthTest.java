@@ -8,6 +8,7 @@ import sys.JoNet.utils.Environment;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -49,12 +50,11 @@ class AuthTest {
     }
 
     @Test
-    @DisplayName("Should not log a user with invalid credentials in")
+    @Disabled
     void failLoginOnBadCredentials() {
     }
 
     @Test
-    @DisplayName("Should log a user with valid credentials in")
     void passLoginOnGoodCredentials() throws AuthException {
         String encodedToken = auth.loginUser("joann.arosemena@gmail.com", "password123");
         
@@ -68,28 +68,22 @@ class AuthTest {
     }
 
     @Test
-    @DisplayName("Retrieve the JoNet system key from the secret manager")
-    void fetchSystemKey() {
-        auth.fetchSystemKey();
-    }
-
-    @Test
-    @DisplayName("Reject invalid signature")
+    @Disabled
     void rejectInvalidSignature() {
     }
 
     @Test
-    @DisplayName("Accept valid signature")
+    @Disabled
     void acceptValidSignature() {
     }
 
     @Test
-    @DisplayName("Read valid claim")
+    @Disabled
     void readValidClaim() {
     }
 
     @Test
-    @DisplayName("Reject invalid claim")
+    @Disabled
     void rejectInvalidClaim() {
     }
 }
