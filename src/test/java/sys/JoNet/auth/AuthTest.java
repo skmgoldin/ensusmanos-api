@@ -18,41 +18,49 @@ import software.amazon.awssdk.services.kms.*;
 import software.amazon.awssdk.services.kms.model.*;
 import sys.JoNet.utils.AttachedResources;
 
+/** These tests are for the access control and user accounts system. */
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.JUnitSpelling"})
 class AuthTest {
 
+  // We get seed randomness from the AWS Key Management Service, kms, and provide it to Java's
+  // SecureRandom implementation.
   static final KmsClient kms = KmsClient.create();
   static final GenerateRandomRequest seedReq =
       GenerateRandomRequest.builder().numberOfBytes(32).build();
   static final byte[] randomSeed = kms.generateRandom(seedReq).plaintext().asByteArray();
   static final SecureRandom random = new SecureRandom(randomSeed);
 
+  // We create a test admin user.
   static final String testAdmin = getRandomString();
   static final String testAdminPassword = getRandomString();
   static final String testAdminPasswordHash =
       Hashing.sha256().hashString(testAdminPassword, StandardCharsets.UTF_8).toString();
 
+  // We create a test non-admin user.
   static final String testUser = getRandomString();
   static final String testUserPassword = getRandomString();
   static final String testUserPasswordHash =
       Hashing.sha256().hashString(testUserPassword, StandardCharsets.UTF_8).toString();
 
+  // Instantiate an Auth instance and fetch the system key for use later verifying JWTs in these
+  // tests.
   static final Auth auth = new Auth();
   static final String SYSTEM_KEY = Auth.fetchSystemKey();
 
+  /** Uses the SecureRandom instance to return random 32-byte hex-encoded strings. */
   private static String getRandomString() {
     byte[] randomBytes = new byte[32];
     random.nextBytes(randomBytes);
     return BaseEncoding.base16().encode(randomBytes);
   }
 
-  @Test
   /**
    * Here we want to test whether a client presenting valid user login credentials is returned a
    * valid JWT signed by system key.
    */
+  @Test
   void passLoginOnGoodCredentials() throws AuthException {
-    String encodedToken = auth.loginUser(testAdmin, testAdminPassword);
+    String encodedToken = auth.loginUser(testUser, testUserPassword);
 
     Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
     JWTVerifier verifier = JWT.require(algorithm).withIssuer("jonet").build();
