@@ -1,5 +1,8 @@
 package sys.JoNet.auth;
 
+import software.amazon.awssdk.services.dynamodb.*;
+import software.amazon.awssdk.services.dynamodb.model.*;
+
 import sys.JoNet.utils.AttachedResources;
 import sys.JoNet.utils.Environment;
 
@@ -10,9 +13,10 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.*;
 
+import java.util.Map;
+
 class AuthTest {
 
-    final String JONET_ENV;
     final String SYSTEM_KEY;
     final Auth auth;
 
@@ -23,8 +27,25 @@ class AuthTest {
                                             environment.getEnvar("JONET_ENV"));
         auth = new Auth(attachedResources);
 
-        JONET_ENV = System.getenv("JONET_ENV");
         SYSTEM_KEY = auth.fetchSystemKey();
+
+        AttributeValue testUserEmail = AttributeValue
+            .builder()
+            .s("joann.arosemena@gmail.com")
+            .build();
+        AttributeValue testUserSecretHash = AttributeValue
+            .builder()
+            .s("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f")
+            .build();
+
+        PutItemRequest putRequest = PutItemRequest.builder()
+            .tableName(attachedResources.getCanonicalName("USERS_DB"))
+            .item(Map.of("user", testUserEmail,
+                         "secretHash", testUserSecretHash))
+            .build();
+
+        DynamoDbClient ddbc = DynamoDbClient.create();
+        ddbc.putItem(putRequest);
     }
 
     @Test
