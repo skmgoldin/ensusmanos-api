@@ -3,6 +3,7 @@ plugins {
     application
     id("io.spring.dependency-management") version "1.0.6.RELEASE"
     id("com.diffplug.gradle.spotless") version "3.18.0"
+    id("com.github.spotbugs") version "1.6.10"
 }
 
 repositories {
@@ -36,17 +37,24 @@ buildscript {
 }
 
 tasks.withType<Test> {
-	useJUnitPlatform()
-	testLogging {
-		events("passed", "skipped", "failed")
-		showStandardStreams = true
-	}
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
 }
 
 spotless {
-	java {
-    	googleJavaFormat()
-	}
+    java {
+        googleJavaFormat()
+    }
+}
+
+tasks.withType<com.github.spotbugs.SpotBugsTask> {
+    reports {
+        xml.isEnabled = false
+        html.isEnabled = true
+    }
 }
 
 application {
