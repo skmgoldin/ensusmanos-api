@@ -1,6 +1,7 @@
 plugins {
     java
     application
+    pmd
     id("io.spring.dependency-management") version "1.0.6.RELEASE"
     id("com.diffplug.gradle.spotless") version "3.18.0"
     id("com.github.spotbugs") version "1.6.10"
