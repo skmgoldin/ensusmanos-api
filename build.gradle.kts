@@ -2,7 +2,7 @@ plugins {
     java
     application
     id("io.spring.dependency-management") version "1.0.6.RELEASE"
-
+    id("com.diffplug.gradle.spotless") version "3.18.0"
 }
 
 repositories {
@@ -43,6 +43,11 @@ tasks.withType<Test> {
 	}
 }
 
+spotless {
+	java {
+    	googleJavaFormat()
+	}
+}
 
 application {
     mainClassName = "sys.JoNet.core.Core"
