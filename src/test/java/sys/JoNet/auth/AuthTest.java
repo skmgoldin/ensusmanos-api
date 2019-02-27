@@ -3,6 +3,8 @@ package sys.JoNet.auth;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.*;
+import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,10 @@ import sys.JoNet.utils.AttachedResources;
 
 class AuthTest {
 
+  static final String testAdmin = "joann.arosemena@gmail.com";
+  static final String testAdminPassword = "password123";
+  static final String testAdminPasswordHash =
+      Hashing.sha256().hashString(testAdminPassword, StandardCharsets.UTF_8).toString();
   static final Auth auth = new Auth();
   static final String SYSTEM_KEY = Auth.fetchSystemKey();
   static boolean initialized = false; // NOPMD
@@ -24,12 +30,8 @@ class AuthTest {
       final AttachedResources attachedResources =
           new AttachedResources(resourceRefNames, appName, env);
 
-      AttributeValue testUserEmail =
-          AttributeValue.builder().s("joann.arosemena@gmail.com").build();
-      AttributeValue testUserSecretHash =
-          AttributeValue.builder()
-              .s("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f")
-              .build();
+      AttributeValue testUserEmail = AttributeValue.builder().s(testAdmin).build();
+      AttributeValue testUserSecretHash = AttributeValue.builder().s(testAdminPasswordHash).build();
 
       PutItemRequest putRequest =
           PutItemRequest.builder()
@@ -49,7 +51,7 @@ class AuthTest {
 
   @Test
   void passLoginOnGoodCredentials() throws AuthException {
-    String encodedToken = auth.loginUser("joann.arosemena@gmail.com", "password123");
+    String encodedToken = auth.loginUser(testAdmin, testAdminPassword);
 
     Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
     JWTVerifier verifier = JWT.require(algorithm).withIssuer("jonet").build();
