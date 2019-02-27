@@ -45,19 +45,18 @@ class AuthTest {
   }
 
   @Test
-  @Disabled
-  void failLoginOnBadCredentials() {}
-
-  @Test
   void passLoginOnGoodCredentials() throws AuthException {
     String encodedToken = auth.loginUser("joann.arosemena@gmail.com", "password123");
 
     Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
     JWTVerifier verifier = JWT.require(algorithm).withIssuer("jonet").build();
 
-    DecodedJWT decodedToken = verifier.verify(encodedToken);
-    System.out.println(decodedToken.getClaim("isAdmin").asBoolean());
+    verifier.verify(encodedToken);
   }
+
+  @Test
+  @Disabled
+  void failLoginOnBadCredentials() {}
 
   @Test
   @Disabled

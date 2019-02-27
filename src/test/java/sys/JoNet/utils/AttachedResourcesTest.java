@@ -39,7 +39,7 @@ class AttachedResourcesTest {
       // we know should exist
       if (referenceName.equals("SYSTEM_KEY")) {
         String sanityCheckValue =
-            new String().concat("jonet.system_key").concat("." + environment.getEnvar("JONET_ENV"));
+            "".concat("jonet.system_key").concat("." + environment.getEnvar("JONET_ENV"));
 
         Assertions.assertTrue(canonicalName.equals(sanityCheckValue));
       }

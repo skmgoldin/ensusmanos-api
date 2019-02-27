@@ -3,6 +3,7 @@ package sys.JoNet.auth;
 import com.auth0.jwt.*;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.google.common.hash.Hashing;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
@@ -72,7 +73,9 @@ class Auth {
     if (response.secretString() != null) {
       return response.secretString();
     } else {
-      return new String(Base64.getDecoder().decode(response.secretBinary().asByteArray()));
+      return new String(
+          Base64.getDecoder().decode(response.secretBinary().asByteArray()),
+          Charset.forName("UTF-8"));
     }
   }
 }

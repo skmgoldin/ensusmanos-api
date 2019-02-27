@@ -16,9 +16,6 @@ import java.util.List;
  * regex [a-z0-9]+[.][a-z0-9_]+[:][a-z0-9]+
  */
 public class AttachedResources {
-  private String applicationPrefix;
-  private String envPostfix;
-
   private HashMap<String, String> attachedResources = new HashMap();
 
   /**
@@ -33,12 +30,10 @@ public class AttachedResources {
    */
   public AttachedResources(
       String[] resourceReferenceNames, String applicationPrefix, String envPostfix) {
-    this.applicationPrefix = applicationPrefix;
-    this.envPostfix = envPostfix;
 
     for (String referenceName : resourceReferenceNames) {
       String resourceCanonicalName =
-          new String()
+          ""
               .concat(applicationPrefix.toLowerCase())
               .concat("." + referenceName.toLowerCase())
               .concat("." + envPostfix.toLowerCase());
