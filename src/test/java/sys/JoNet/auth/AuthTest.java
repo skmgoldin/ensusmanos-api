@@ -59,34 +59,67 @@ class AuthTest {
    * valid JWT signed by system key.
    */
   @Test
-  void passLoginOnGoodCredentials() throws AuthException {
+  void loginNormalUser() throws AuthException {
     String encodedToken = auth.loginUser(testUser, testUserPassword);
 
     Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
     JWTVerifier verifier = JWT.require(algorithm).withIssuer("jonet").build();
 
-    verifier.verify(encodedToken);
+    DecodedJWT jwt = verifier.verify(encodedToken);
+    Assertions.assertFalse(jwt.getClaim("isAdmin").asBoolean());
+  }
+
+  /**
+   * Here we want to test whether a client presenting valid admin login credentials is returned a
+   * valid JWT with the admin attestation signed by system key.
+   */
+  @Test
+  void loginAdminUser() throws AuthException {
+    String encodedToken = auth.loginUser(testAdmin, testAdminPassword);
+
+    Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
+    JWTVerifier verifier = JWT.require(algorithm).withIssuer("jonet").build();
+
+    DecodedJWT jwt = verifier.verify(encodedToken);
+    Assertions.assertTrue(jwt.getClaim("isAdmin").asBoolean());
+  }
+
+  @Test
+  void failLoginWithBadUsername() {
+    try {
+      auth.loginUser(getRandomString(), testAdminPassword);
+    } catch (Exception e) {
+      return;
+    }
+
+    Assertions.fail("Non-existant user was able to login with another user's password");
+  }
+
+  @Test
+  void failLoginWithBadPassword() {
+    try {
+      auth.loginUser(testAdmin, getRandomString());
+    } catch (Exception e) {
+      return;
+    }
+
+    Assertions.fail("User was able to login with a random string for a password");
+  }
+
+  @Test
+  void failLoginWithBadUsernameAndPassword() {
+    try {
+      auth.loginUser(getRandomString(), getRandomString());
+    } catch (Exception e) {
+      return;
+    }
+
+    Assertions.fail("User was able to login with a random username and password");
   }
 
   @Test
   @Disabled
-  void failLoginOnBadCredentials() {}
-
-  @Test
-  @Disabled
   void rejectInvalidSignature() {}
-
-  @Test
-  @Disabled
-  void acceptValidSignature() {}
-
-  @Test
-  @Disabled
-  void readValidClaim() {}
-
-  @Test
-  @Disabled
-  void rejectInvalidClaim() {}
 
   /**
    * To setup the tests we are going to add two transient users to the USERS_DB: a normal user and
