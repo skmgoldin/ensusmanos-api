@@ -7,6 +7,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -19,7 +20,6 @@ import software.amazon.awssdk.services.kms.model.*;
 import sys.JoNet.utils.AttachedResources;
 
 /** These tests are for the access control and user accounts system. */
-@SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.JUnitSpelling"})
 class AuthTest {
 
   // We get seed randomness from the AWS Key Management Service, kms, and provide it to Java's
@@ -30,13 +30,13 @@ class AuthTest {
   static final byte[] randomSeed = kms.generateRandom(seedReq).plaintext().asByteArray();
   static final SecureRandom random = new SecureRandom(randomSeed);
 
-  // We create a test admin user.
+  // We create a test admin user with a random name and password..
   static final String testAdmin = getRandomString();
   static final String testAdminPassword = getRandomString();
   static final String testAdminPasswordHash =
       Hashing.sha256().hashString(testAdminPassword, StandardCharsets.UTF_8).toString();
 
-  // We create a test non-admin user.
+  // We create a test non-admin user with a random name and password..
   static final String testUser = getRandomString();
   static final String testUserPassword = getRandomString();
   static final String testUserPasswordHash =
@@ -59,8 +59,8 @@ class AuthTest {
    * valid JWT signed by system key.
    */
   @Test
-  void loginNormalUser() throws AuthException {
-    String encodedToken = auth.loginUser(testUser, testUserPassword);
+  void loginNormalUser() throws UserAuthException {
+    String encodedToken = auth.generateUserToken(testUser, testUserPassword);
 
     Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
     JWTVerifier verifier = JWT.require(algorithm).withIssuer("jonet").build();
@@ -74,8 +74,8 @@ class AuthTest {
    * valid JWT with the admin attestation signed by system key.
    */
   @Test
-  void loginAdminUser() throws AuthException {
-    String encodedToken = auth.loginUser(testAdmin, testAdminPassword);
+  void loginAdminUser() throws UserAuthException {
+    String encodedToken = auth.generateUserToken(testAdmin, testAdminPassword);
 
     Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
     JWTVerifier verifier = JWT.require(algorithm).withIssuer("jonet").build();
@@ -87,8 +87,8 @@ class AuthTest {
   @Test
   void failLoginWithBadUsername() {
     try {
-      auth.loginUser(getRandomString(), testAdminPassword);
-    } catch (Exception e) {
+      auth.generateUserToken(getRandomString(), testAdminPassword);
+    } catch (UserAuthException e) {
       return;
     }
 
@@ -98,8 +98,8 @@ class AuthTest {
   @Test
   void failLoginWithBadPassword() {
     try {
-      auth.loginUser(testAdmin, getRandomString());
-    } catch (Exception e) {
+      auth.generateUserToken(testAdmin, getRandomString());
+    } catch (UserAuthException e) {
       return;
     }
 
@@ -109,8 +109,8 @@ class AuthTest {
   @Test
   void failLoginWithBadUsernameAndPassword() {
     try {
-      auth.loginUser(getRandomString(), getRandomString());
-    } catch (Exception e) {
+      auth.generateUserToken(getRandomString(), getRandomString());
+    } catch (UserAuthException e) {
       return;
     }
 
@@ -118,8 +118,24 @@ class AuthTest {
   }
 
   @Test
-  @Disabled
-  void rejectInvalidSignature() {}
+  void rejectInvalidJWTSignature() {
+    Algorithm algorithm = Algorithm.HMAC256("Not the system key");
+    String token =
+        JWT.create()
+            .withIssuer("jonet")
+            .withIssuedAt(new Date())
+            .withClaim("isAdmin", true)
+            .sign(algorithm);
+
+    Assertions.assertFalse(auth.authenticateUserToken(token));
+  }
+
+  @Test
+  void acceptValidJWTSignature() throws UserAuthException {
+    String token = auth.generateUserToken(testAdmin, testAdminPassword);
+
+    Assertions.assertTrue(auth.authenticateUserToken(token));
+  }
 
   /**
    * To setup the tests we are going to add two transient users to the USERS_DB: a normal user and
@@ -155,7 +171,8 @@ class AuthTest {
             .item(
                 Map.of(
                     "user", testUserEmail,
-                    "secretHash", testUserSecretHash))
+                    "secretHash", testUserSecretHash,
+                    "isAdmin", AttributeValue.builder().bool(false).build()))
             .build();
 
     // Create a list of writes we desire to make

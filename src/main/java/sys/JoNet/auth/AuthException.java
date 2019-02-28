@@ -1,8 +1,7 @@
 package sys.JoNet.auth;
 
-@SuppressWarnings("PMD.MissingSerialVersionUID")
-class AuthException extends Exception {
-  public AuthException(String message) {
-    super(message);
+class UserAuthException extends Exception {
+  public UserAuthException() {
+    super("User presented invalid credentials");
   }
 }

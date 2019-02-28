@@ -25,7 +25,6 @@ class AttachedResourcesTest {
 
     // Make sure that all canonical names match a correct regex format
     for (String referenceName : referenceNames) {
-      @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
       String canonicalName = attachedResources.getCanonicalName(referenceName);
 
       Assertions.assertTrue(canonicalName.matches("[a-z0-9]+[.][a-z0-9_]+[.][a-z0-9]+"));
