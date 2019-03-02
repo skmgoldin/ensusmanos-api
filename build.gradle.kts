@@ -20,6 +20,7 @@ dependencies {
     implementation("software.amazon.awssdk:kms:2.4.12")
     implementation("com.google.guava:guava:27.0.1-jre")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.9.8")
+    runtimeOnly("org.slf4j:slf4j-simple:1.7.26")
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.4.0")
 }
