@@ -8,7 +8,7 @@ RUN apt-get install -y openjdk-11-jdk-headless
 COPY . $HOME/app/
 WORKDIR /app
 
-RUN ./gradlew assemble
+RUN ./gradlew --no-daemon clean assemble
 
-ENTRYPOINT ["./gradlew", "appRun"]
+ENTRYPOINT ["./gradlew", "--no-daemon", "run"]
 
