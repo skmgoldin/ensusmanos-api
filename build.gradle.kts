@@ -4,6 +4,7 @@ plugins {
     id("io.spring.dependency-management") version "1.0.6.RELEASE"
     id("com.diffplug.gradle.spotless") version "3.18.0"
     id("com.github.spotbugs") version "1.6.10"
+    id("io.freefair.lombok") version "3.1.4"
 }
 
 repositories {
@@ -18,6 +19,7 @@ dependencies {
     implementation("software.amazon.awssdk:dynamodb:2.4.12")
     implementation("software.amazon.awssdk:kms:2.4.12")
     implementation("com.google.guava:guava:27.0.1-jre")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.9.8")
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.4.0")
 }
@@ -59,7 +61,7 @@ tasks.withType<com.github.spotbugs.SpotBugsTask> {
 }
 
 application {
-    mainClassName = "sys.JoNet.core.Core"
+    mainClassName = "sys.JoNet.Api"
 }
 
 

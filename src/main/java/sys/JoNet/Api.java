@@ -1,13 +1,11 @@
-package sys.JoNet.core;
+package sys.JoNet;
 
 import static spark.Spark.*;
 
-public class Core {
+import sys.JoNet.auth.GenerateUserTokenRequestHandler;
+
+public class Api {
   public static void main(String[] args) {
-    post(
-        "/works",
-        (req, res) -> {
-          return "Hello";
-        });
+    post("/GenerateUserToken/", new GenerateUserTokenRequestHandler());
   }
 }

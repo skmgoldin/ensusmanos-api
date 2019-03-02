@@ -2,12 +2,12 @@ package sys.JoNet.auth;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.*;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -17,10 +17,11 @@ import software.amazon.awssdk.services.dynamodb.*;
 import software.amazon.awssdk.services.dynamodb.model.*;
 import software.amazon.awssdk.services.kms.*;
 import software.amazon.awssdk.services.kms.model.*;
+import sys.JoNet.Answer;
 import sys.JoNet.utils.AttachedResources;
+import sys.JoNet.utils.SystemKey;
 
-/** These tests are for the access control and user accounts system. */
-class AuthTest {
+class GenerateUserTokenRequestHandlerTest {
 
   // We get seed randomness from the AWS Key Management Service, kms, and provide it to Java's
   // SecureRandom implementation.
@@ -42,10 +43,10 @@ class AuthTest {
   static final String testUserPasswordHash =
       Hashing.sha256().hashString(testUserPassword, StandardCharsets.UTF_8).toString();
 
-  // Instantiate an Auth instance and fetch the system key for use later verifying JWTs in these
+  // Instantiate a handler instance and fetch the system key for use later verifying JWTs in these
   // tests.
-  static final Auth auth = new Auth();
-  static final String SYSTEM_KEY = Auth.fetchSystemKey();
+  static final GenerateUserTokenRequestHandler reqHandler = new GenerateUserTokenRequestHandler();
+  static final String SYSTEM_KEY = SystemKey.getSystemKey();
 
   /** Uses the SecureRandom instance to return random 32-byte hex-encoded strings. */
   private static String getRandomString() {
@@ -60,7 +61,12 @@ class AuthTest {
    */
   @Test
   void loginNormalUser() throws UserAuthException {
-    String encodedToken = auth.generateUserToken(testUser, testUserPassword);
+    GenerateUserTokenPayload payload = new GenerateUserTokenPayload();
+    payload.setUsername(testUser);
+    payload.setPassword(testUserPassword);
+
+    Answer answer = reqHandler.process(payload);
+    String encodedToken = answer.getBody();
 
     Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
     JWTVerifier verifier = JWT.require(algorithm).withIssuer("jonet").build();
@@ -75,7 +81,12 @@ class AuthTest {
    */
   @Test
   void loginAdminUser() throws UserAuthException {
-    String encodedToken = auth.generateUserToken(testAdmin, testAdminPassword);
+    GenerateUserTokenPayload payload = new GenerateUserTokenPayload();
+    payload.setUsername(testAdmin);
+    payload.setPassword(testAdminPassword);
+
+    Answer answer = reqHandler.process(payload);
+    String encodedToken = answer.getBody();
 
     Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
     JWTVerifier verifier = JWT.require(algorithm).withIssuer("jonet").build();
@@ -86,20 +97,44 @@ class AuthTest {
 
   @Test
   void failLoginWithBadUsername() {
+    GenerateUserTokenPayload payload = new GenerateUserTokenPayload();
+    payload.setUsername(getRandomString());
+    payload.setPassword(testAdminPassword);
+
+    Answer answer = reqHandler.process(payload);
+    String encodedToken = answer.getBody();
+
+    Assertions.assertTrue(answer.getCode() == 400);
+
+    Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
+    JWTVerifier verifier = JWT.require(algorithm).withIssuer("jonet").build();
+
     try {
-      auth.generateUserToken(getRandomString(), testAdminPassword);
-    } catch (UserAuthException e) {
+      verifier.verify(encodedToken);
+    } catch (JWTVerificationException e) {
       return;
     }
 
-    Assertions.fail("Non-existant user was able to login with another user's password");
+    Assertions.fail("User was able to login with a random string for a username");
   }
 
   @Test
   void failLoginWithBadPassword() {
+    GenerateUserTokenPayload payload = new GenerateUserTokenPayload();
+    payload.setUsername(testAdmin);
+    payload.setPassword(getRandomString());
+
+    Answer answer = reqHandler.process(payload);
+    String encodedToken = answer.getBody();
+
+    Assertions.assertTrue(answer.getCode() == 400);
+
+    Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
+    JWTVerifier verifier = JWT.require(algorithm).withIssuer("jonet").build();
+
     try {
-      auth.generateUserToken(testAdmin, getRandomString());
-    } catch (UserAuthException e) {
+      verifier.verify(encodedToken);
+    } catch (JWTVerificationException e) {
       return;
     }
 
@@ -108,33 +143,25 @@ class AuthTest {
 
   @Test
   void failLoginWithBadUsernameAndPassword() {
+    GenerateUserTokenPayload payload = new GenerateUserTokenPayload();
+    payload.setUsername(getRandomString());
+    payload.setPassword(getRandomString());
+
+    Answer answer = reqHandler.process(payload);
+    String encodedToken = answer.getBody();
+
+    Assertions.assertTrue(answer.getCode() == 400);
+
+    Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
+    JWTVerifier verifier = JWT.require(algorithm).withIssuer("jonet").build();
+
     try {
-      auth.generateUserToken(getRandomString(), getRandomString());
-    } catch (UserAuthException e) {
+      verifier.verify(encodedToken);
+    } catch (JWTVerificationException e) {
       return;
     }
 
     Assertions.fail("User was able to login with a random username and password");
-  }
-
-  @Test
-  void rejectInvalidJWTSignature() {
-    Algorithm algorithm = Algorithm.HMAC256("Not the system key");
-    String token =
-        JWT.create()
-            .withIssuer("jonet")
-            .withIssuedAt(new Date())
-            .withClaim("isAdmin", true)
-            .sign(algorithm);
-
-    Assertions.assertFalse(auth.authenticateUserToken(token));
-  }
-
-  @Test
-  void acceptValidJWTSignature() throws UserAuthException {
-    String token = auth.generateUserToken(testAdmin, testAdminPassword);
-
-    Assertions.assertTrue(auth.authenticateUserToken(token));
   }
 
   /**

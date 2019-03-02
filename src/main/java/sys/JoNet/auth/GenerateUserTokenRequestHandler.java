@@ -3,25 +3,37 @@ package sys.JoNet.auth;
 import com.auth0.jwt.*;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.google.common.hash.Hashing;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 import software.amazon.awssdk.services.dynamodb.*;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import software.amazon.awssdk.services.secretsmanager.*;
-import software.amazon.awssdk.services.secretsmanager.model.*;
+import sys.JoNet.AbstractRequestHandler;
+import sys.JoNet.Answer;
 import sys.JoNet.utils.AttachedResources;
+import sys.JoNet.utils.SystemKey;
 
-class Auth {
+public class GenerateUserTokenRequestHandler
+    extends AbstractRequestHandler<GenerateUserTokenPayload> {
 
-  private static final String[] resourceRefNames = {"SYSTEM_KEY", "USERS_DB"};
+  private static final String[] resourceRefNames = {"USERS_DB"};
   private static final String appName = "jonet";
   private static final String env = System.getenv("JONET_ENV");
   private static final AttachedResources attachedResources =
       new AttachedResources(resourceRefNames, appName, env);
-  private static String SYSTEM_KEY = fetchSystemKey();
+
+  public GenerateUserTokenRequestHandler() {
+    super(GenerateUserTokenPayload.class);
+  }
+
+  protected Answer processImpl(GenerateUserTokenPayload payload) {
+    try {
+      String token = generateUserToken(payload.getUsername(), payload.getPassword());
+      return new Answer(200, token);
+    } catch (UserAuthException e) {
+      return new Answer(400, e.getMessage());
+    }
+  }
 
   /**
    * Generate a JWT for a user.
@@ -31,7 +43,7 @@ class Auth {
    * @throws UserAuthException if the user provides bad credentials
    * @return a JSON web token which may be kept in browser local storage
    */
-  public String generateUserToken(String username, String secret) throws UserAuthException {
+  private String generateUserToken(String username, String secret) throws UserAuthException {
     DynamoDbClient userDb = DynamoDbClient.create();
     String secretHash = Hashing.sha256().hashString(secret, StandardCharsets.UTF_8).toString();
 
@@ -61,7 +73,7 @@ class Auth {
     }
 
     // Generate a JWT
-    Algorithm algorithm = Algorithm.HMAC256(SYSTEM_KEY);
+    Algorithm algorithm = Algorithm.HMAC256(SystemKey.getSystemKey());
     String token =
         JWT.create()
             .withIssuer(appName)
@@ -71,43 +83,5 @@ class Auth {
             .sign(algorithm);
 
     return token;
-  }
-
-  /**
-   * Authenticate a JWT presented by a user.
-   *
-   * @param token an encoded JWT
-   * @return true if the token is valid, false if the token is in any way invalid.
-   */
-  public boolean authenticateUserToken(String token) {
-    Algorithm algo = Algorithm.HMAC256(SYSTEM_KEY);
-    JWTVerifier verifier = JWT.require(algo).withIssuer(appName).build();
-
-    try {
-      verifier.verify(token);
-    } catch (Exception e) {
-      return false;
-    }
-
-    return true;
-  }
-
-  // The system key is used for signing and verifying user JWTs.
-  static String fetchSystemKey() {
-    SecretsManagerClient client = SecretsManagerClient.builder().build();
-    String keyCName = attachedResources.getCanonicalName("SYSTEM_KEY");
-
-    // Create and send a request to get the secret value.
-    GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(keyCName).build();
-    GetSecretValueResponse response = client.getSecretValue(request);
-
-    // Return the secret as a string
-    if (response.secretString() != null) {
-      return response.secretString();
-    } else {
-      return new String(
-          Base64.getDecoder().decode(response.secretBinary().asByteArray()),
-          Charset.forName("UTF-8"));
-    }
   }
 }
