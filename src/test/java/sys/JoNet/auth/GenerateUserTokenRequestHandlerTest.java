@@ -7,10 +7,10 @@ import com.auth0.jwt.interfaces.*;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Random;
 import org.junit.jupiter.api.*;
 import software.amazon.awssdk.core.*;
 import software.amazon.awssdk.services.dynamodb.*;
@@ -25,13 +25,7 @@ import sys.JoNet.utils.SystemKey;
 
 class GenerateUserTokenRequestHandlerTest {
 
-  // We get seed randomness from the AWS Key Management Service, kms, and provide it to Java's
-  // SecureRandom implementation.
-  static final KmsClient kms = KmsClient.create();
-  static final GenerateRandomRequest seedReq =
-      GenerateRandomRequest.builder().numberOfBytes(32).build();
-  static final byte[] randomSeed = kms.generateRandom(seedReq).plaintext().asByteArray();
-  static final SecureRandom random = new SecureRandom(randomSeed);
+  static final Random random = new Random();
 
   // We create a test admin user with a random name and password..
   static final String testAdmin = getRandomString();

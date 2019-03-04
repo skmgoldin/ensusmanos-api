@@ -2,11 +2,9 @@ package sys.JoNet.utils;
 
 import com.google.common.io.BaseEncoding;
 import java.nio.charset.Charset;
-import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Date;
-import software.amazon.awssdk.services.kms.*;
-import software.amazon.awssdk.services.kms.model.*;
+import java.util.Random;
 import software.amazon.awssdk.services.secretsmanager.*;
 import software.amazon.awssdk.services.secretsmanager.model.*;
 
@@ -55,12 +53,9 @@ public class SystemKey {
   }
 
   private static String getTestSystemKey() {
-    final KmsClient kms = KmsClient.create();
-    final GenerateRandomRequest seedReq = GenerateRandomRequest.builder().numberOfBytes(32).build();
-    final byte[] randomSeed = kms.generateRandom(seedReq).plaintext().asByteArray();
-    final SecureRandom random = new SecureRandom(randomSeed);
+    final Random random = new Random();
 
-    byte[] randomBytes = new byte[32];
+    final byte[] randomBytes = new byte[32];
     random.nextBytes(randomBytes);
     return BaseEncoding.base16().encode(randomBytes);
   }
