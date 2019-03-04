@@ -1,8 +1,12 @@
 package sys.JoNet.utils;
 
+import com.google.common.io.BaseEncoding;
 import java.nio.charset.Charset;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Date;
+import software.amazon.awssdk.services.kms.*;
+import software.amazon.awssdk.services.kms.model.*;
 import software.amazon.awssdk.services.secretsmanager.*;
 import software.amazon.awssdk.services.secretsmanager.model.*;
 
@@ -21,24 +25,43 @@ public class SystemKey {
   // The system key is used for signing and verifying user JWTs.
   public static String getSystemKey() {
     if ((clock.getTime() - lastUpdated) > UPDATE_INTERVAL) {
-      SecretsManagerClient client = SecretsManagerClient.builder().build();
-      String keyCName = attachedResources.getCanonicalName("SYSTEM_KEY");
-
-      // Create and send a request to get the secret value.
-      GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(keyCName).build();
-      GetSecretValueResponse response = client.getSecretValue(request);
-
-      // Return the secret as a string
-      if (response.secretString() != null) {
-        SYSTEM_KEY = response.secretString();
+      if (System.getenv("JONET_TEST").equals("true")) {
+        SYSTEM_KEY = getTestSystemKey();
       } else {
-        SYSTEM_KEY =
-            new String(
-                Base64.getDecoder().decode(response.secretBinary().asByteArray()),
-                Charset.forName("UTF-8"));
+        SYSTEM_KEY = getEnvSystemKey();
       }
     }
 
+    lastUpdated = new Date().getTime();
     return SYSTEM_KEY;
+  }
+
+  private static String getEnvSystemKey() {
+    SecretsManagerClient client = SecretsManagerClient.builder().build();
+    String keyCName = attachedResources.getCanonicalName("SYSTEM_KEY");
+
+    // Create and send a request to get the secret value.
+    GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(keyCName).build();
+    GetSecretValueResponse response = client.getSecretValue(request);
+
+    // Return the secret as a string
+    if (response.secretString() != null) {
+      return response.secretString();
+    } else {
+      return new String(
+          Base64.getDecoder().decode(response.secretBinary().asByteArray()),
+          Charset.forName("UTF-8"));
+    }
+  }
+
+  private static String getTestSystemKey() {
+    final KmsClient kms = KmsClient.create();
+    final GenerateRandomRequest seedReq = GenerateRandomRequest.builder().numberOfBytes(32).build();
+    final byte[] randomSeed = kms.generateRandom(seedReq).plaintext().asByteArray();
+    final SecureRandom random = new SecureRandom(randomSeed);
+
+    byte[] randomBytes = new byte[32];
+    random.nextBytes(randomBytes);
+    return BaseEncoding.base16().encode(randomBytes);
   }
 }
