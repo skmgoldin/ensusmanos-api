@@ -62,7 +62,7 @@ abstract class AbstractDynamoDbDao<T> implements KVObjectDao<T> {
     partitionKey = keySchemas.get(0).attributeName();
   }
 
-  public abstract T get(String key);
+  public abstract T get(String key) throws NoItemException;
 
   /*
    * @param key partition key of the object to get

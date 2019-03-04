@@ -172,12 +172,32 @@ class GenerateUserTokenRequestHandlerTest {
    */
   @BeforeAll
   public static void setup() {
-    final UsersDbDao dbClient = new UsersDbDao();
+    // Create a new table
+    final UsersDbDao usersDb = new UsersDbDao();
+    final AttachedResources ar =
+        new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_ENV"));
+
+    final AttributeDefinition ad =
+        AttributeDefinition.builder().attributeName("username").attributeType("S").build();
+    final KeySchemaElement kse =
+        KeySchemaElement.builder().attributeName("username").keyType("HASH").build();
+    final CreateTableRequest req =
+        CreateTableRequest.builder()
+            .billingMode("PAY_PER_REQUEST")
+            .attributeDefinitions(ad)
+            .keySchema(kse)
+            .tableName(ar.getCanonicalName("USERS_DB"))
+            .build();
+
+    final DynamoDbClient rawDbClient = usersDb.getDbClient();
+    rawDbClient.createTable(req);
+
+    // Add users to it
     final User admin = new User(testAdmin, testAdminPasswordHash, true);
     final User user = new User(testUser, testUserPasswordHash);
 
-    dbClient.put(admin);
-    dbClient.put(user);
+    usersDb.put(admin);
+    usersDb.put(user);
   }
 
   /** After the tests, we should delete the temporary users from the database. */
@@ -199,9 +219,9 @@ class GenerateUserTokenRequestHandlerTest {
 
     // Prepare two delete requests, one for the admin and one for the regular user.
     DeleteRequest adminDeleteRequest =
-        DeleteRequest.builder().key(Map.of("user", testAdminEmail)).build();
+        DeleteRequest.builder().key(Map.of("username", testAdminEmail)).build();
     DeleteRequest userDeleteRequest =
-        DeleteRequest.builder().key(Map.of("user", testUserEmail)).build();
+        DeleteRequest.builder().key(Map.of("username", testUserEmail)).build();
 
     // Create a list of writes (deletes in this case) we desire to make
     final LinkedList<WriteRequest> deleteReqsList = new LinkedList();
@@ -217,5 +237,12 @@ class GenerateUserTokenRequestHandlerTest {
     final BatchWriteItemRequest batchWriteReq =
         BatchWriteItemRequest.builder().requestItems(deleteReqMap).build();
     rawDb.batchWriteItem(batchWriteReq);
+
+    final DeleteTableRequest req =
+        DeleteTableRequest.builder()
+            .tableName(attachedResources.getCanonicalName("USERS_DB"))
+            .build();
+
+    rawDb.deleteTable(req);
   }
 }

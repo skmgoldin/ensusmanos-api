@@ -6,7 +6,7 @@ package sys.JoNet.daos;
  */
 public interface KVObjectDao<T> {
 
-  T get(String key);
+  T get(String key) throws NoItemException;
 
   /**
    * The put operation adds an object to the key value store, overwriting any which may already

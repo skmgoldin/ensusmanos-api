@@ -16,7 +16,7 @@ class UsersDbDaoTest {
   }
 
   @Test
-  void getARecord() {
+  void getARecord() throws NoItemException {
     usersDb.put(user);
     User returnedRecord = usersDb.get("Bob Dole");
 

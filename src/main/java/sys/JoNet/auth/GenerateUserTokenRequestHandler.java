@@ -5,11 +5,13 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.Map;
 import software.amazon.awssdk.services.dynamodb.*;
 import software.amazon.awssdk.services.dynamodb.model.*;
 import sys.JoNet.AbstractRequestHandler;
 import sys.JoNet.Answer;
+import sys.JoNet.daos.NoItemException;
+import sys.JoNet.daos.User;
+import sys.JoNet.daos.UsersDbDao;
 import sys.JoNet.utils.AttachedResources;
 import sys.JoNet.utils.SystemKey;
 
@@ -44,44 +46,33 @@ public class GenerateUserTokenRequestHandler
    * @return a JSON web token which may be kept in browser local storage
    */
   private String generateUserToken(String username, String secret) throws UserAuthException {
-    DynamoDbClient userDb = DynamoDbClient.create();
+    UsersDbDao userDb = new UsersDbDao();
     String secretHash = Hashing.sha256().hashString(secret, StandardCharsets.UTF_8).toString();
 
-    // Create and send a request to get the user record from the database
-    GetItemRequest userRecordRequest =
-        GetItemRequest.builder()
-            .tableName(attachedResources.getCanonicalName("USERS_DB"))
-            .key(Map.of("user", AttributeValue.builder().s(username).build()))
-            .build();
-    Map<String, AttributeValue> userRecord = userDb.getItem(userRecordRequest).item();
+    try {
+      User user = userDb.get(username);
 
-    // If the user provided a non-existant username, the record will be empty
-    if (userRecord.isEmpty()) {
+      // Parse out the stored secretHash and make sure it matches that provided by the user
+      if (!secretHash.equals(user.getSecretHash())) {
+        throw new UserAuthException();
+      }
+
+      // If the user is an admin, make note of this so we can provide that claim in their JWT
+      boolean isAdmin = user.getIsAdmin() ? true : false;
+
+      // Generate a JWT
+      Algorithm algorithm = Algorithm.HMAC256(SystemKey.getSystemKey());
+      String token =
+          JWT.create()
+              .withIssuer(appName)
+              .withIssuedAt(new Date())
+              .withExpiresAt(new Date(new Date().getTime() + 604800000)) // Expires in seven days
+              .withClaim("isAdmin", isAdmin)
+              .sign(algorithm);
+
+      return token;
+    } catch (NoItemException e) {
       throw new UserAuthException();
     }
-
-    // Parse out the stored secretHash and make sure it matches that provided by the user
-    String storedSecretHash = userRecord.get("secretHash").s();
-    if (!secretHash.equals(storedSecretHash)) {
-      throw new UserAuthException();
-    }
-
-    // If the user is an admin, make note of this so we can provide that claim in their JWT
-    boolean isAdmin = false;
-    if (userRecord.containsKey("isAdmin")) {
-      isAdmin = userRecord.get("isAdmin").bool();
-    }
-
-    // Generate a JWT
-    Algorithm algorithm = Algorithm.HMAC256(SystemKey.getSystemKey());
-    String token =
-        JWT.create()
-            .withIssuer(appName)
-            .withIssuedAt(new Date())
-            .withExpiresAt(new Date(new Date().getTime() + 604800000)) // Expires in seven days
-            .withClaim("isAdmin", isAdmin)
-            .sign(algorithm);
-
-    return token;
   }
 }

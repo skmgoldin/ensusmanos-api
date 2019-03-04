@@ -25,8 +25,12 @@ public class UsersDbDao extends AbstractDynamoDbDao<User> {
    * @param key the partition key of the user being queried
    * @return a User object representing the queried user record
    */
-  public User get(String key) {
+  public User get(String key) throws NoItemException {
     Map<String, AttributeValue> userMap = getImpl(key);
+
+    if (userMap.isEmpty()) {
+      throw new NoItemException(key);
+    }
 
     return new User(
         userMap.get("username").s(), userMap.get("secretHash").s(), userMap.get("isAdmin").bool());
