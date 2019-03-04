@@ -18,6 +18,8 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 import software.amazon.awssdk.services.kms.*;
 import software.amazon.awssdk.services.kms.model.*;
 import sys.JoNet.Answer;
+import sys.JoNet.daos.User;
+import sys.JoNet.daos.UsersDbDao;
 import sys.JoNet.utils.AttachedResources;
 import sys.JoNet.utils.SystemKey;
 
@@ -170,53 +172,12 @@ class GenerateUserTokenRequestHandlerTest {
    */
   @BeforeAll
   public static void setup() {
-    // Initialize attached resources canonical names
-    final String[] resourceRefNames = {"SYSTEM_KEY", "USERS_DB"};
-    final String appName = "jonet";
-    final String env = System.getenv("JONET_ENV");
-    final AttachedResources attachedResources =
-        new AttachedResources(resourceRefNames, appName, env);
+    final UsersDbDao dbClient = new UsersDbDao();
+    final User admin = new User(testAdmin, testAdminPasswordHash, true);
+    final User user = new User(testUser, testUserPasswordHash);
 
-    // Create AttributeValue variables from the initialized static actor variables.
-    AttributeValue testAdminEmail = AttributeValue.builder().s(testAdmin).build();
-    AttributeValue testAdminSecretHash = AttributeValue.builder().s(testAdminPasswordHash).build();
-    AttributeValue testUserEmail = AttributeValue.builder().s(testUser).build();
-    AttributeValue testUserSecretHash = AttributeValue.builder().s(testUserPasswordHash).build();
-
-    // Prepare two put requests, one for the admin and one for the regular user. For the admin we
-    // add an "isAdmin" property and set it to true.
-    PutRequest adminPutRequest =
-        PutRequest.builder()
-            .item(
-                Map.of(
-                    "user", testAdminEmail,
-                    "secretHash", testAdminSecretHash,
-                    "isAdmin", AttributeValue.builder().bool(true).build()))
-            .build();
-    PutRequest userPutRequest =
-        PutRequest.builder()
-            .item(
-                Map.of(
-                    "user", testUserEmail,
-                    "secretHash", testUserSecretHash,
-                    "isAdmin", AttributeValue.builder().bool(false).build()))
-            .build();
-
-    // Create a list of writes we desire to make
-    final LinkedList<WriteRequest> writeReqsList = new LinkedList();
-    writeReqsList.add(WriteRequest.builder().putRequest(adminPutRequest).build());
-    writeReqsList.add(WriteRequest.builder().putRequest(userPutRequest).build());
-
-    // Create a mapping of tables we desire to write to, along with the lists of writes we desire to
-    // make to those tables.
-    final HashMap<String, LinkedList<WriteRequest>> writeReqMap = new HashMap();
-    writeReqMap.put(attachedResources.getCanonicalName("USERS_DB"), writeReqsList);
-
-    // Create a BatchWriteItemRequest and send it
-    final BatchWriteItemRequest batchWriteReq =
-        BatchWriteItemRequest.builder().requestItems(writeReqMap).build();
-    DynamoDbClient ddbc = DynamoDbClient.create();
-    ddbc.batchWriteItem(batchWriteReq);
+    dbClient.put(admin);
+    dbClient.put(user);
   }
 
   /** After the tests, we should delete the temporary users from the database. */
@@ -228,6 +189,9 @@ class GenerateUserTokenRequestHandlerTest {
     final String env = System.getenv("JONET_ENV");
     final AttachedResources attachedResources =
         new AttachedResources(resourceRefNames, appName, env);
+
+    final UsersDbDao dbClient = new UsersDbDao();
+    final DynamoDbClient rawDb = dbClient.getDbClient();
 
     // Create AttributeValue variables from the initialized static actor variables.
     AttributeValue testAdminEmail = AttributeValue.builder().s(testAdmin).build();
@@ -252,7 +216,6 @@ class GenerateUserTokenRequestHandlerTest {
     // Create a BatchWriteItemRequest and send it
     final BatchWriteItemRequest batchWriteReq =
         BatchWriteItemRequest.builder().requestItems(deleteReqMap).build();
-    DynamoDbClient ddbc = DynamoDbClient.create();
-    ddbc.batchWriteItem(batchWriteReq);
+    rawDb.batchWriteItem(batchWriteReq);
   }
 }
