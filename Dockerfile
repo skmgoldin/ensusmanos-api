@@ -10,10 +10,12 @@ RUN mkdir /opt/gradle
 RUN unzip -d /opt/gradle gradle-5.2.1-bin.zip
 ENV PATH "$PATH:/opt/gradle/gradle-5.2.1/bin"
 
-COPY . $HOME/app/
+ADD build.gradle.kts $HOME/app/
 WORKDIR /app
+RUN gradle --no-daemon assemble
 
-RUN gradle --no-daemon clean assemble
+ADD src $HOME/app/src
+RUN gradle --no-daemon assemble
 
 CMD ["gradle", "--no-daemon", "run"]
 
