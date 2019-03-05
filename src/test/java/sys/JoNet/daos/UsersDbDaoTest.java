@@ -22,7 +22,7 @@ class UsersDbDaoTest {
 
     Assertions.assertTrue(returnedRecord.getUsername().equals(user.getUsername()));
     Assertions.assertTrue(returnedRecord.getSecretHash().equals(user.getSecretHash()));
-    Assertions.assertTrue(returnedRecord.getIsAdmin() == false);
+    Assertions.assertTrue(returnedRecord.isAdmin() == false);
   }
 
   /** Before running these tests, we need to make sure a table exists. */

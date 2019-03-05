@@ -46,7 +46,7 @@ public class UsersDbDao extends AbstractDynamoDbDao<User> {
 
     userAsMap.put("username", AttributeValue.builder().s(user.getUsername()).build());
     userAsMap.put("secretHash", AttributeValue.builder().s(user.getSecretHash()).build());
-    userAsMap.put("isAdmin", AttributeValue.builder().bool(user.getIsAdmin()).build());
+    userAsMap.put("isAdmin", AttributeValue.builder().bool(user.isAdmin()).build());
 
     putImpl(userAsMap);
   }

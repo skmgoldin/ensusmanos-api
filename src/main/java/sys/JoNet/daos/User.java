@@ -27,9 +27,4 @@ public class User {
     this.secretHash = secretHash;
     this.isAdmin = isAdmin;
   }
-
-  // TODO: Invesigate why lombok isn't generating a getter for this
-  public boolean getIsAdmin() {
-    return isAdmin;
-  }
 }

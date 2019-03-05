@@ -58,7 +58,7 @@ public class GenerateUserTokenRequestHandler
       }
 
       // If the user is an admin, make note of this so we can provide that claim in their JWT
-      boolean isAdmin = user.getIsAdmin() ? true : false;
+      boolean isAdmin = user.isAdmin() ? true : false;
 
       // Generate a JWT
       Algorithm algorithm = Algorithm.HMAC256(SystemKey.getSystemKey());
