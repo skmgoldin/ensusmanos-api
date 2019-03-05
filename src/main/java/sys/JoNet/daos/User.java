@@ -3,9 +3,10 @@ package sys.JoNet.daos;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
+import java.io.Serializable;
 
 @Data
-public class User {
+public class User implements Serializable {
 
   @Setter(AccessLevel.PRIVATE)
   private String username;
