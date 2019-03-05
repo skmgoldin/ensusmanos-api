@@ -3,6 +3,7 @@ package sys.JoNet.auth;
 import com.auth0.jwt.*;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.google.common.hash.Hashing;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import software.amazon.awssdk.services.dynamodb.*;
@@ -34,6 +35,8 @@ public class GenerateUserTokenRequestHandler
       return new Answer(200, token);
     } catch (UserAuthException e) {
       return new Answer(400, e.getMessage());
+    } catch (Exception e) {
+      return new Answer(500, e.getMessage());
     }
   }
 
@@ -45,7 +48,7 @@ public class GenerateUserTokenRequestHandler
    * @throws UserAuthException if the user provides bad credentials
    * @return a JSON web token which may be kept in browser local storage
    */
-  private String generateUserToken(String username, String secret) throws UserAuthException {
+  private String generateUserToken(String username, String secret) throws Exception {
     UsersDbDao userDb = new UsersDbDao();
     String secretHash = Hashing.sha256().hashString(secret, StandardCharsets.UTF_8).toString();
 
@@ -73,6 +76,8 @@ public class GenerateUserTokenRequestHandler
       return token;
     } catch (NoItemException e) {
       throw new UserAuthException();
+    } catch (ClassNotFoundException | IOException e) {
+      throw new Exception(e.getMessage());
     }
   }
 }

@@ -165,7 +165,7 @@ class GenerateUserTokenRequestHandlerTest {
    * an admin.
    */
   @BeforeAll
-  public static void setup() {
+  public static void setup() throws Exception {
     // Create a new table
     final UsersDbDao usersDb = new UsersDbDao();
     final AttachedResources ar =

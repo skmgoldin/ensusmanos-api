@@ -6,11 +6,11 @@ package sys.JoNet.daos;
  */
 public interface KVObjectDao<T> {
 
-  T get(String key) throws NoItemException;
+  T get(String key) throws NoItemException, Exception;
 
   /**
    * The put operation adds an object to the key value store, overwriting any which may already
    * exist under the object's primary key.
    */
-  void put(T object);
+  void put(T object) throws Exception;
 }

@@ -11,12 +11,12 @@ class UsersDbDaoTest {
   private static final User user = new User("Bob Dole", "DEADBEEF");
 
   @Test
-  void putARecord() {
+  void putARecord() throws Exception {
     usersDb.put(user);
   }
 
   @Test
-  void getARecord() throws NoItemException {
+  void getARecord() throws NoItemException, Exception {
     usersDb.put(user);
     User returnedRecord = usersDb.get("Bob Dole");
 

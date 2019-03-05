@@ -1,11 +1,11 @@
 package sys.JoNet.daos;
 
-import org.junit.jupiter.api.*;
-import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import org.junit.jupiter.api.*;
 
 class UserTest {
 

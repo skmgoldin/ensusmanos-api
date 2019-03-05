@@ -1,8 +1,5 @@
 package sys.JoNet.daos;
 
-import java.util.HashMap;
-import java.util.Map;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import sys.JoNet.utils.AttachedResources;
 
 /**
@@ -25,15 +22,8 @@ public class UsersDbDao extends AbstractDynamoDbDao<User> {
    * @param key the partition key of the user being queried
    * @return a User object representing the queried user record
    */
-  public User get(String key) throws NoItemException {
-    Map<String, AttributeValue> userMap = getImpl(key);
-
-    if (userMap.isEmpty()) {
-      throw new NoItemException(key);
-    }
-
-    return new User(
-        userMap.get("username").s(), userMap.get("secretHash").s(), userMap.get("isAdmin").bool());
+  public User get(String key) throws NoItemException, Exception {
+    return getImpl(key);
   }
 
   /**
@@ -41,13 +31,7 @@ public class UsersDbDao extends AbstractDynamoDbDao<User> {
    *
    * @param user the user to write to the database
    */
-  public void put(User user) {
-    Map<String, AttributeValue> userAsMap = new HashMap();
-
-    userAsMap.put("username", AttributeValue.builder().s(user.getUsername()).build());
-    userAsMap.put("secretHash", AttributeValue.builder().s(user.getSecretHash()).build());
-    userAsMap.put("isAdmin", AttributeValue.builder().bool(user.isAdmin()).build());
-
-    putImpl(userAsMap);
+  public void put(User user) throws Exception {
+    putImpl(user, user.getUsername());
   }
 }
