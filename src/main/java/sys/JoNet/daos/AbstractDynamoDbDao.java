@@ -1,6 +1,9 @@
 package sys.JoNet.daos;
 
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import software.amazon.awssdk.services.dynamodb.*;
@@ -27,12 +30,17 @@ abstract class AbstractDynamoDbDao<T> implements KVObjectDao<T> {
    */
   public AbstractDynamoDbDao(String table) {
     this.table = table;
-
     if (System.getenv("JONET_TEST").equals("true")) {
       try {
-        URI endpointUri = new URI("http://localhost:" + System.getenv("JONET_DEV_DB_PORT"));
+        URI endpointUri =
+            new URI(
+                "http://"
+                    + InetAddress.getByName(System.getenv("JONET_TEST_USERS_DB_HOST_NAME"))
+                        .getHostAddress()
+                    + ":"
+                    + System.getenv("JONET_TEST_USERS_DB_PORT"));
         dbClient = DynamoDbClient.builder().endpointOverride(endpointUri).build();
-      } catch (Exception e) {
+      } catch (URISyntaxException | UnknownHostException e) {
         System.err.println("The URI for the dev db is malformed. No db client set.");
       }
     } else {

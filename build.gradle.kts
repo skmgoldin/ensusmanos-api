@@ -20,9 +20,11 @@ dependencies {
     implementation("software.amazon.awssdk:kms:2.4.12")
     implementation("com.google.guava:guava:27.0.1-jre")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.9.8")
+    implementation("org.junit.jupiter:junit-jupiter:5.4.0")
+    implementation("org.junit.jupiter:junit-jupiter-engine:5.4.0")
     runtimeOnly("org.slf4j:slf4j-simple:1.7.26")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.4.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.4.0")
+    //testImplementation("org.junit.jupiter:junit-jupiter:5.4.0")
+    //testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.4.0")
 }
 
 dependencyManagement {
@@ -46,6 +48,62 @@ tasks.withType<Test> {
         events("passed", "skipped", "failed")
         showStandardStreams = true
     }
+}
+
+tasks.register<Exec>("dTestNetwork") {
+  commandLine("docker", "network", "create", "--driver", "bridge",
+  System.getenv("JONET_TEST_NET_NAME"))
+}
+
+tasks.register<Exec>("dbuild") {
+  commandLine("docker", "build", "-t", "jonet/api", ".")
+}
+
+tasks.register("ddynamo") {
+  dependsOn("dTestNetwork")
+  val portMapping = StringBuilder().append(System.getenv("JONET_TEST_USERS_DB_PORT")).append(":8000")
+    .toString()
+  doLast {
+    ProcessBuilder().command("docker", "run", "--name", System.getenv("JONET_TEST_USERS_DB_HOST_NAME"), "-p",
+    portMapping, "--network", System.getenv("JONET_TEST_NET_NAME"),
+    "amazon/dynamodb-local").start()
+  }
+}
+
+tasks.register<Exec>("dtest") {
+  dependsOn("dTestNetwork")
+  dependsOn("dbuild")
+  dependsOn("ddynamo")
+  val jonetEnv = StringBuilder().append("JONET_ENV=").append(environment["JONET_ENV"])
+  val jonetPort = StringBuilder().append("JONET_PORT=").append(environment["JONET_PORT"])
+  val jonetTest = StringBuilder().append("JONET_TEST=").append(environment["JONET_TEST"])
+  val awsRegion = StringBuilder().append("AWS_REGION=").append(environment["AWS_REGION"])
+  val awsAccessKeyId = StringBuilder().append("AWS_ACCESS_KEY_ID=")
+    .append(environment["AWS_ACCESS_KEY_ID"])
+  val awsSecretAccessKey = StringBuilder().append("AWS_SECRET_ACCESS_KEY=")
+    .append(environment["AWS_SECRET_ACCESS_KEY"])
+  val jonetTestUsersDbPort = StringBuilder().append("JONET_TEST_USERS_DB_PORT=")
+    .append(environment["JONET_TEST_USERS_DB_PORT"])
+  val jonetTestUsersDbHostName = StringBuilder().append("JONET_TEST_USERS_DB_HOST_NAME=")
+    .append(environment["JONET_TEST_USERS_DB_HOST_NAME"])
+  val portMapping = StringBuilder().append(environment["JONET_PORT"]).append(":")
+    .append(environment["JONET_PORT"]).append("/tcp")
+
+  commandLine("docker", "run", "-e", jonetEnv, "-e", jonetPort, "-e", awsRegion, "-e",
+  awsAccessKeyId, "-e", awsSecretAccessKey, "-e", jonetTestUsersDbPort, "-e", jonetTest,
+  "-e", jonetTestUsersDbHostName, "-p", portMapping, "--network", System.getenv("JONET_TEST_NET_NAME"),
+  "jonet/api", "gradle", "build") 
+
+  finalizedBy("dCleanup")
+}
+
+tasks.register<Exec>("dCleanup") {
+  dependsOn("dKillTestDb")
+  commandLine("docker", "system", "prune", "-f")
+}
+  
+tasks.register<Exec>("dKillTestDb") {
+  commandLine("docker", "kill", System.getenv("JONET_TEST_USERS_DB_HOST_NAME"))
 }
 
 spotless {
