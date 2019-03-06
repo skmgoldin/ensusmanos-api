@@ -1,21 +1,17 @@
 FROM ubuntu:18.04
 
 SHELL ["/bin/bash", "-c"]
+WORKDIR $HOME/app
 
-RUN apt-get update
-RUN apt-get install -y openjdk-11-jdk-headless wget unzip
+RUN apt-get update && apt-get install -y openjdk-11-jdk-headless wget unzip
 
-RUN wget -q https://services.gradle.org/distributions/gradle-5.2.1-bin.zip
-RUN mkdir /opt/gradle
-RUN unzip -d /opt/gradle gradle-5.2.1-bin.zip
-ENV PATH "$PATH:/opt/gradle/gradle-5.2.1/bin"
+COPY build.gradle.kts $HOME/app/
+COPY gradlew $HOME/app
+COPY gradle $HOME/app/gradle
+RUN ./gradlew --no-daemon assemble
 
-ADD build.gradle.kts $HOME/app/
-WORKDIR /app
-RUN gradle --no-daemon assemble
+COPY src $HOME/app/src
+RUN ./gradlew --no-daemon assemble
 
-ADD src $HOME/app/src
-RUN gradle --no-daemon assemble
-
-CMD ["gradle", "--no-daemon", "run"]
+CMD ["./gradlew", "--no-daemon", "run"]
 

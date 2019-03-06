@@ -92,7 +92,7 @@ tasks.register<Exec>("dtest") {
   commandLine("docker", "run", "-e", jonetEnv, "-e", jonetPort, "-e", awsRegion, "-e",
   awsAccessKeyId, "-e", awsSecretAccessKey, "-e", jonetTestUsersDbPort, "-e", jonetTest,
   "-e", jonetTestUsersDbHostName, "-p", portMapping, "--network", System.getenv("JONET_TEST_NET_NAME"),
-  "jonet/api", "gradle", "build") 
+  "jonet/api", "./gradlew", "build") 
 
   finalizedBy("dCleanup")
 }
