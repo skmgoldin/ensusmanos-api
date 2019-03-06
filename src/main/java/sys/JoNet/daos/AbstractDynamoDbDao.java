@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,30 +27,13 @@ abstract class AbstractDynamoDbDao<T extends Serializable> implements KVObjectDa
   private String partitionKey;
 
   /**
-   * The constructor takes a single argument, which is the name of the table to work against. The
-   * constructor also checks the environment it is in and, if it is a test environment, attempts to
-   * connect to a local database instance.
+   * The constructor takes a single argument, which is the name of the table to work against.
    *
    * @param table the canonical table name to operate against
    */
   public AbstractDynamoDbDao(String table) {
     this.table = table;
-    if (System.getenv("JONET_TEST").equals("true")) {
-      try {
-        URI endpointUri =
-            new URI(
-                "http://"
-                    + InetAddress.getByName(System.getenv("JONET_TEST_USERS_DB_HOST_NAME"))
-                        .getHostAddress()
-                    + ":"
-                    + System.getenv("JONET_TEST_USERS_DB_PORT"));
-        dbClient = DynamoDbClient.builder().endpointOverride(endpointUri).build();
-      } catch (URISyntaxException | UnknownHostException e) {
-        System.err.println("The URI for the dev db is malformed. No db client set.");
-      }
-    } else {
-      dbClient = DynamoDbClient.create();
-    }
+    dbClient = DynamoDbClient.create();
   }
 
   /**
@@ -62,6 +42,10 @@ abstract class AbstractDynamoDbDao<T extends Serializable> implements KVObjectDa
    */
   public DynamoDbClient getDbClient() {
     return dbClient;
+  }
+
+  protected void endpointOverride(URI endpointUri) {
+    dbClient = DynamoDbClient.builder().endpointOverride(endpointUri).build();
   }
 
   /**

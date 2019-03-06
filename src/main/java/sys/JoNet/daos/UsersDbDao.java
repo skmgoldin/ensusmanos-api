@@ -1,5 +1,9 @@
 package sys.JoNet.daos;
 
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import sys.JoNet.utils.AttachedResources;
 
 /**
@@ -12,8 +16,26 @@ public class UsersDbDao extends AbstractDynamoDbDao<User> {
       new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_ENV"));
   private static final String TABLE = ar.getCanonicalName("USERS_DB");
 
+  /**
+   * The constructor checks the environment it is in and, if it is a test environment, attempts to
+   * connect to a local database instance.
+   */
   public UsersDbDao() {
     super(TABLE);
+    if (System.getenv("JONET_TEST").equals("true")) {
+      try {
+        URI endpointUri =
+            new URI(
+                "http://"
+                    + InetAddress.getByName(System.getenv("JONET_TEST_USERS_DB_HOST_NAME"))
+                        .getHostAddress()
+                    + ":"
+                    + System.getenv("JONET_TEST_USERS_DB_PORT"));
+        endpointOverride(endpointUri);
+      } catch (URISyntaxException | UnknownHostException e) {
+        System.err.println("The URI for the dev db is malformed. No db client set.");
+      }
+    }
   }
 
   /**
