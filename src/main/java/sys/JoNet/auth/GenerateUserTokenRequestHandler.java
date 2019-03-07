@@ -21,7 +21,7 @@ public class GenerateUserTokenRequestHandler
 
   private static final String[] resourceRefNames = {"USERS_DB"};
   private static final String appName = "jonet";
-  private static final String env = System.getenv("JONET_ENV");
+  private static final String env = System.getenv("JONET_API_ENV");
   private static final AttachedResources attachedResources =
       new AttachedResources(resourceRefNames, appName, env);
 

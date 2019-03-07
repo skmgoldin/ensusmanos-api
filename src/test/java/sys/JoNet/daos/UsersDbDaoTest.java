@@ -29,7 +29,7 @@ class UsersDbDaoTest {
   @BeforeAll
   public static void setup() {
     AttachedResources ar =
-        new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_ENV"));
+        new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_API_ENV"));
 
     AttributeDefinition ad =
         AttributeDefinition.builder().attributeName("username").attributeType("S").build();
@@ -52,7 +52,7 @@ class UsersDbDaoTest {
   @AfterAll
   public static void teardown() {
     AttachedResources ar =
-        new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_ENV"));
+        new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_API_ENV"));
 
     DeleteTableRequest req =
         DeleteTableRequest.builder().tableName(ar.getCanonicalName("USERS_DB")).build();

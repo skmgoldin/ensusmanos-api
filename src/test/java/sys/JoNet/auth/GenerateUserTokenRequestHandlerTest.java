@@ -169,7 +169,7 @@ class GenerateUserTokenRequestHandlerTest {
     // Create a new table
     final UsersDbDao usersDb = new UsersDbDao();
     final AttachedResources ar =
-        new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_ENV"));
+        new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_API_ENV"));
 
     final AttributeDefinition ad =
         AttributeDefinition.builder().attributeName("username").attributeType("S").build();
@@ -200,7 +200,7 @@ class GenerateUserTokenRequestHandlerTest {
     // Initialize attached resources canonical names
     final String[] resourceRefNames = {"SYSTEM_KEY", "USERS_DB"};
     final String appName = "jonet";
-    final String env = System.getenv("JONET_ENV");
+    final String env = System.getenv("JONET_API_ENV");
     final AttachedResources attachedResources =
         new AttachedResources(resourceRefNames, appName, env);
 

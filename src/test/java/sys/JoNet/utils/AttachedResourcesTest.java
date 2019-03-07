@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 class AttachedResourcesTest {
   private static final String[] resourceRefNames = {"SYSTEM_KEY", "USERS_DB"};
   private static final String appName = "jonet";
-  private static final String env = System.getenv("JONET_ENV");
+  private static final String env = System.getenv("JONET_API_ENV");
   private static AttachedResources attachedResources =
       new AttachedResources(resourceRefNames, appName, env);
 

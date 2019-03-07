@@ -6,13 +6,9 @@ class WriteWorkRequestHandlerTest {
 
   @Test
   @Disabled
-  void shouldWriteANewWork() {
-
-  }
+  void shouldWriteANewWork() {}
 
   @Test
   @Disabled
-  void shouldNotOverwriteAnExtantWork() {
-
-  }
+  void shouldNotOverwriteAnExtantWork() {}
 }

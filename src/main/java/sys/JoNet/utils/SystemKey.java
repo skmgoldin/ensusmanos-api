@@ -11,7 +11,7 @@ import software.amazon.awssdk.services.secretsmanager.model.*;
 public class SystemKey {
   private static final String[] resourceRefNames = {"SYSTEM_KEY"};
   private static final String appName = "jonet";
-  private static final String env = System.getenv("JONET_ENV");
+  private static final String env = System.getenv("JONET_API_ENV");
   private static final AttachedResources attachedResources =
       new AttachedResources(resourceRefNames, appName, env);
 
@@ -23,7 +23,7 @@ public class SystemKey {
   // The system key is used for signing and verifying user JWTs.
   public static String getSystemKey() {
     if ((clock.getTime() - lastUpdated) > UPDATE_INTERVAL) {
-      if (System.getenv("JONET_TEST").equals("true")) {
+      if (System.getenv("JONET_API_TEST").equals("true")) {
         SYSTEM_KEY = getTestSystemKey();
       } else {
         SYSTEM_KEY = getEnvSystemKey();

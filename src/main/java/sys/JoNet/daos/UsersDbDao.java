@@ -13,7 +13,7 @@ import sys.JoNet.utils.AttachedResources;
 public class UsersDbDao extends AbstractDynamoDbDao<User> {
 
   private static final AttachedResources ar =
-      new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_ENV"));
+      new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_API_ENV"));
   private static final String TABLE = ar.getCanonicalName("USERS_DB");
 
   /**
@@ -22,15 +22,15 @@ public class UsersDbDao extends AbstractDynamoDbDao<User> {
    */
   public UsersDbDao() {
     super(TABLE);
-    if (System.getenv("JONET_TEST").equals("true")) {
+    if (System.getenv("JONET_API_TEST").equals("true")) {
       try {
         URI endpointUri =
             new URI(
                 "http://"
-                    + InetAddress.getByName(System.getenv("JONET_TEST_USERS_DB_HOST_NAME"))
+                    + InetAddress.getByName(System.getenv("JONET_API_TEST_USERS_DB_HOST_NAME"))
                         .getHostAddress()
                     + ":"
-                    + System.getenv("JONET_TEST_USERS_DB_PORT"));
+                    + System.getenv("JONET_API_TEST_USERS_DB_PORT"));
         endpointOverride(endpointUri);
       } catch (URISyntaxException | UnknownHostException e) {
         System.err.println("The URI for the dev db is malformed. No db client set.");
