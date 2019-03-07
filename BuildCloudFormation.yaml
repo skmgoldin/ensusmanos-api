@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  Stack:
+    Type: String
+  Postfix:
+    Type: String
+Resources:
+  ImageRepository:
+    Type: AWS::ECR::Repository
+    Properties: 
+      RepositoryName: !Sub "${Stack}-${Postfix}"
+Outputs:
+  ImageRepository:
+    Value: !Ref ImageRepository
+
