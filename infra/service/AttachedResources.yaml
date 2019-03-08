@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  StackName:
+    Type: String
+
+Resources:
+  UsersDatabase:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: username
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: username
+          KeyType: HASH
+
+  SystemKey:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      GenerateSecretString: {}
+
+Outputs:
+  UserDatabase:
+    Value: !Ref UsersDatabase
+    Export:
+      Name: !Join [ ':', [ !Ref StackName, 'UsersDatabase' ] ]
+  SystemKey:
+    Value: !Ref SystemKey
+    Export:
+      Name: !Join [ ':', [ !Ref StackName, 'SystemKey' ] ]
+

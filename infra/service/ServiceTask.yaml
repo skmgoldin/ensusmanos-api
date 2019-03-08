@@ -1,33 +1,131 @@
 AWSTemplateFormatVersion: 2010-09-09
-Resources:
-    UserDatabase:
-        Type: 'AWS::DynamoDB::Table'
-        Properties:
-            AttributeDefinitions:
-                - AttributeName: user
-                  AttributeType: S
-            BillingMode: PAY_PER_REQUEST
-            KeySchema:
-                - AttributeName: user
-                  KeyType: HASH
-            TableName: !Sub "jonet.users_db.${Env}"
-            Tags:
-                - Key: App
-                  Value: JoNet
-                - Key: Env
-                  Value: !Ref Env
-    SystemKey:
-        Type: "AWS::SecretsManager::Secret"
-        Properties:
-            GenerateSecretString: {}
-            Tags: 
-                - Key: App
-                  Value: JoNet
-                - Key: Env
-                  Value: !Ref Env
-            Name: !Sub "jonet.system_key.${Env}"
 
 Parameters:
-    Env:
-        Type: String
+  StackName:
+    Type: String
+  ImageUrl:
+    Type: String
+  ContainerPort:
+    Type: Number
+  ServiceName:
+    Type: String
+  ServiceMemory:
+    Type: Number
+  ServiceCpu:
+    Type: Number
+  DesiredCount:
+    Type: Number
+
+
+Resources:
+  ApiTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref ServiceName
+      Memory: !Ref ServiceMemory
+      Cpu: !Ref ServiceCpu
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub '${StackName}:ECSTaskExecutionRole'
+      TaskRoleArn: !Ref TaskRole
+      ContainerDefinitions:
+        - Name: !Ref ServiceName
+          Cpu: !Ref ServiceCpu
+          Memory: !Ref ServiceMemory
+          Image: !Ref ImageUrl
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+          Environment:
+            - Name: JONET_API_PORT
+              Value: !Ref ContainerPort
+            - Name: JONET_API_USERS_DB_NAME
+              Value: 
+                Fn::ImportValue: !Sub '${StackName}:UsersDatabase'
+            - Name: JONET_API_SYSTEM_KEY_ARN
+              Value:
+                Fn::ImportValue: !Sub '${StackName}:SystemKey'
+            - Name: JONET_API_TEST
+              Value: false
+
+  # IAM policy for the ECS task
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [ecs.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+      - PolicyName: !Sub '${ServiceName}-task'
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+              - 'dynamodb:GetItem'
+              - 'dynamodb:PutItem'
+              - 'dynamodb:DescribeTable'
+              - 'secretsmanager:GetSecretValue'
+            Resource: '*'
+
+  ApiService:
+    Type: AWS::ECS::Service
+    DependsOn: LoadBalancerRule
+    Properties:
+      ServiceName: !Ref ServiceName
+      Cluster:
+        Fn::ImportValue: !Sub '${StackName}:ClusterName'
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DesiredCount: !Ref DesiredCount
+      HealthCheckGracePeriodSeconds: 60
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Fn::ImportValue: !Sub '${StackName}:FargateContainerSecurityGroup'
+          Subnets:
+            - Fn::ImportValue: !Sub '${StackName}:PrivateSubnetZero'
+            - Fn::ImportValue: !Sub '${StackName}:PrivateSubnetOne'
+      TaskDefinition: !Ref ApiTask
+      LoadBalancers:
+        - ContainerName: !Ref ServiceName
+          ContainerPort: !Ref ContainerPort
+          TargetGroupArn: !Ref TargetGroup
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 5
+      HealthCheckPath: /ping/
+      HealthCheckPort: !Ref ContainerPort
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 3
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      TargetType: ip
+      Name: !Ref ServiceName
+      Port: !Ref ContainerPort
+      Protocol: HTTP
+      VpcId:
+        Fn::ImportValue: !Sub '${StackName}:VPCId'
+
+  LoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      Conditions:
+        - Field: path-pattern
+          Values: ["*"]
+      ListenerArn:
+        Fn::ImportValue: !Sub '${StackName}:PublicListener'
+      Priority: 100
 

@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ImageUrl:
+    Type: String
+
+Resources:
+  ComputeCluster:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-east-2.amazonaws.com/054393190750-cloudformation-templates/jonet/service/ComputeCluster.yaml
+      Parameters:
+        StackName: !Ref 'AWS::StackName'
+
+  AttachedResources:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-east-2.amazonaws.com/054393190750-cloudformation-templates/jonet/service/AttachedResources.yaml
+      Parameters:
+        StackName: !Ref 'AWS::StackName'
+
+  ServiceTask:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: ComputeCluster
+    Properties:
+      TemplateURL: https://s3.us-east-2.amazonaws.com/054393190750-cloudformation-templates/jonet/service/ServiceTask.yaml
+      Parameters:
+        StackName: !Ref 'AWS::StackName' 
+        ServiceName: 'jonet-api'
+        ImageUrl: !Ref ImageUrl
+        ContainerPort: 80
+        ServiceMemory: 512
+        ServiceCpu: 256
+        DesiredCount: 2
+

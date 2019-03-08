@@ -7,9 +7,9 @@ export JONET_API_TEST_USERS_DB_HOST_NAME=xxx
 export JONET_API_TEST_USERS_DB_PORT=8000
 export JONET_API_TEST_NET_NAME=xxx
 export JONET_API_IMAGE_REGISTRY=054393190750.dkr.ecr.us-east-2.amazonaws.com/jonet-api
+export JONET_API_BUILD_STACK_NAME=jonet-api-build
+export JONET_API_SERVICE_STACK_NAME=jonet-api-service
+export JONET_API_APP_NAME=jonet-api
 
-# The AWS variables are not used in tests, but cannot be null
-export AWS_REGION=xxx
-export AWS_ACCESS_KEY_ID=xxx
-export AWS_SECRET_ACCESS_KEY=xxx
+export AWS_REGION=us-east-2
 
