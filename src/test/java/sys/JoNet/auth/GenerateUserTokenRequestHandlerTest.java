@@ -20,7 +20,6 @@ import software.amazon.awssdk.services.kms.model.*;
 import sys.JoNet.Answer;
 import sys.JoNet.daos.User;
 import sys.JoNet.daos.UsersDbDao;
-import sys.JoNet.utils.AttachedResources;
 import sys.JoNet.utils.SystemKey;
 
 class GenerateUserTokenRequestHandlerTest {
@@ -168,8 +167,6 @@ class GenerateUserTokenRequestHandlerTest {
   public static void setup() throws Exception {
     // Create a new table
     final UsersDbDao usersDb = new UsersDbDao();
-    final AttachedResources ar =
-        new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_API_ENV"));
 
     final AttributeDefinition ad =
         AttributeDefinition.builder().attributeName("username").attributeType("S").build();
@@ -180,7 +177,7 @@ class GenerateUserTokenRequestHandlerTest {
             .billingMode("PAY_PER_REQUEST")
             .attributeDefinitions(ad)
             .keySchema(kse)
-            .tableName(ar.getCanonicalName("USERS_DB"))
+            .tableName(System.getenv("JONET_API_USERS_DB_NAME"))
             .build();
 
     final DynamoDbClient rawDbClient = usersDb.getDbClient();
@@ -197,13 +194,6 @@ class GenerateUserTokenRequestHandlerTest {
   /** After the tests, we should delete the temporary users from the database. */
   @AfterAll
   public static void teardown() {
-    // Initialize attached resources canonical names
-    final String[] resourceRefNames = {"SYSTEM_KEY", "USERS_DB"};
-    final String appName = "jonet";
-    final String env = System.getenv("JONET_API_ENV");
-    final AttachedResources attachedResources =
-        new AttachedResources(resourceRefNames, appName, env);
-
     final UsersDbDao dbClient = new UsersDbDao();
     final DynamoDbClient rawDb = dbClient.getDbClient();
 
@@ -225,7 +215,7 @@ class GenerateUserTokenRequestHandlerTest {
     // Create a mapping of tables we desire to write to, along with the lists of writes (deletes) we
     // desire to make to those tables.
     final HashMap<String, LinkedList<WriteRequest>> deleteReqMap = new HashMap();
-    deleteReqMap.put(attachedResources.getCanonicalName("USERS_DB"), deleteReqsList);
+    deleteReqMap.put(System.getenv("JONET_API_USERS_DB_NAME"), deleteReqsList);
 
     // Create a BatchWriteItemRequest and send it
     final BatchWriteItemRequest batchWriteReq =
@@ -233,9 +223,7 @@ class GenerateUserTokenRequestHandlerTest {
     rawDb.batchWriteItem(batchWriteReq);
 
     final DeleteTableRequest req =
-        DeleteTableRequest.builder()
-            .tableName(attachedResources.getCanonicalName("USERS_DB"))
-            .build();
+        DeleteTableRequest.builder().tableName(System.getenv("JONET_API_USERS_DB_NAME")).build();
 
     rawDb.deleteTable(req);
   }

@@ -3,7 +3,6 @@ package sys.JoNet.daos;
 import org.junit.jupiter.api.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import sys.JoNet.utils.AttachedResources;
 
 class UsersDbDaoTest {
 
@@ -28,8 +27,6 @@ class UsersDbDaoTest {
   /** Before running these tests, we need to make sure a table exists. */
   @BeforeAll
   public static void setup() {
-    AttachedResources ar =
-        new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_API_ENV"));
 
     AttributeDefinition ad =
         AttributeDefinition.builder().attributeName("username").attributeType("S").build();
@@ -40,7 +37,7 @@ class UsersDbDaoTest {
             .billingMode("PAY_PER_REQUEST")
             .attributeDefinitions(ad)
             .keySchema(kse)
-            .tableName(ar.getCanonicalName("USERS_DB"))
+            .tableName(System.getenv("JONET_API_USERS_DB_NAME"))
             .build();
 
     DynamoDbClient dbClient = usersDb.getDbClient();
@@ -51,11 +48,8 @@ class UsersDbDaoTest {
   /** Tear down the table. */
   @AfterAll
   public static void teardown() {
-    AttachedResources ar =
-        new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_API_ENV"));
-
     DeleteTableRequest req =
-        DeleteTableRequest.builder().tableName(ar.getCanonicalName("USERS_DB")).build();
+        DeleteTableRequest.builder().tableName(System.getenv("JONET_API_USERS_DB_NAME")).build();
 
     DynamoDbClient dbClient = usersDb.getDbClient();
 

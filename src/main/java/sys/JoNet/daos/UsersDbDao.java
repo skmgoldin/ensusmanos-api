@@ -4,7 +4,6 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import sys.JoNet.utils.AttachedResources;
 
 /**
  * The UsersDbDao provides a more ergonomic wrapper on the AWS DynamoDb semantics for get and put
@@ -12,16 +11,14 @@ import sys.JoNet.utils.AttachedResources;
  */
 public class UsersDbDao extends AbstractDynamoDbDao<User> {
 
-  private static final AttachedResources ar =
-      new AttachedResources(new String[] {"USERS_DB"}, "jonet", System.getenv("JONET_API_ENV"));
-  private static final String TABLE = ar.getCanonicalName("USERS_DB");
+  private static final String table = System.getenv("JONET_API_USERS_DB_NAME");
 
   /**
    * The constructor checks the environment it is in and, if it is a test environment, attempts to
    * connect to a local database instance.
    */
   public UsersDbDao() {
-    super(TABLE);
+    super(table);
     if (System.getenv("JONET_API_TEST").equals("true")) {
       try {
         URI endpointUri =

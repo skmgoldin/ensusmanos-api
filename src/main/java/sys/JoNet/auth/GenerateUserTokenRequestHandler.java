@@ -13,17 +13,10 @@ import sys.JoNet.Answer;
 import sys.JoNet.daos.NoItemException;
 import sys.JoNet.daos.User;
 import sys.JoNet.daos.UsersDbDao;
-import sys.JoNet.utils.AttachedResources;
 import sys.JoNet.utils.SystemKey;
 
 public class GenerateUserTokenRequestHandler
     extends AbstractRequestHandler<GenerateUserTokenPayload> {
-
-  private static final String[] resourceRefNames = {"USERS_DB"};
-  private static final String appName = "jonet";
-  private static final String env = System.getenv("JONET_API_ENV");
-  private static final AttachedResources attachedResources =
-      new AttachedResources(resourceRefNames, appName, env);
 
   public GenerateUserTokenRequestHandler() {
     super(GenerateUserTokenPayload.class);
@@ -67,7 +60,7 @@ public class GenerateUserTokenRequestHandler
       Algorithm algorithm = Algorithm.HMAC256(SystemKey.getSystemKey());
       String token =
           JWT.create()
-              .withIssuer(appName)
+              .withIssuer("jonet")
               .withIssuedAt(new Date())
               .withExpiresAt(new Date(new Date().getTime() + 604800000)) // Expires in seven days
               .withClaim("isAdmin", isAdmin)

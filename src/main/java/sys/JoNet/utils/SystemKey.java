@@ -9,12 +9,6 @@ import software.amazon.awssdk.services.secretsmanager.*;
 import software.amazon.awssdk.services.secretsmanager.model.*;
 
 public class SystemKey {
-  private static final String[] resourceRefNames = {"SYSTEM_KEY"};
-  private static final String appName = "jonet";
-  private static final String env = System.getenv("JONET_API_ENV");
-  private static final AttachedResources attachedResources =
-      new AttachedResources(resourceRefNames, appName, env);
-
   private static final long UPDATE_INTERVAL = 86400000;
   private static final Date clock = new Date();
   private static long lastUpdated = 0;
@@ -36,10 +30,10 @@ public class SystemKey {
 
   private static String getEnvSystemKey() {
     SecretsManagerClient client = SecretsManagerClient.builder().build();
-    String keyCName = attachedResources.getCanonicalName("SYSTEM_KEY");
+    String keyArn = System.getenv("JONET_API_SYSTEM_KEY_ARN");
 
     // Create and send a request to get the secret value.
-    GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(keyCName).build();
+    GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(keyArn).build();
     GetSecretValueResponse response = client.getSecretValue(request);
 
     // Return the secret as a string

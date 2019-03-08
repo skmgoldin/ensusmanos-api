@@ -74,7 +74,7 @@ tasks.register<Exec>("dtest") {
   dependsOn("dTestNetwork")
   dependsOn("dbuild")
   dependsOn("ddynamo")
-  val jonetEnv = StringBuilder().append("JONET_API_ENV=").append(environment["JONET_API_ENV"])
+  val jonetUsersDbName = StringBuilder().append("JONET_API_USERS_DB_NAME=").append(environment["JONET_API_USERS_DB_NAME"])
   val jonetPort = StringBuilder().append("JONET_API_PORT=").append(environment["JONET_API_PORT"])
   val jonetTest = StringBuilder().append("JONET_API_TEST=").append(environment["JONET_API_TEST"])
   val awsRegion = StringBuilder().append("AWS_REGION=").append(environment["AWS_REGION"])
@@ -89,7 +89,7 @@ tasks.register<Exec>("dtest") {
   val portMapping = StringBuilder().append(environment["JONET_API_PORT"]).append(":")
     .append(environment["JONET_API_PORT"]).append("/tcp")
 
-  commandLine("docker", "run", "-e", jonetEnv, "-e", jonetPort, "-e", awsRegion, "-e",
+  commandLine("docker", "run", "-e", jonetUsersDbName, "-e", jonetPort, "-e", awsRegion, "-e",
   awsAccessKeyId, "-e", awsSecretAccessKey, "-e", jonetTestUsersDbPort, "-e", jonetTest,
   "-e", jonetTestUsersDbHostName, "-p", portMapping, "--network", System.getenv("JONET_API_TEST_NET_NAME"),
   System.getenv("JONET_API_IMAGE_REGISTRY"), "./gradlew", "build") 
