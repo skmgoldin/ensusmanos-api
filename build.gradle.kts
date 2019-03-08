@@ -23,8 +23,6 @@ dependencies {
     implementation("org.junit.jupiter:junit-jupiter:5.4.0")
     implementation("org.junit.jupiter:junit-jupiter-engine:5.4.0")
     runtimeOnly("org.slf4j:slf4j-simple:1.7.26")
-    //testImplementation("org.junit.jupiter:junit-jupiter:5.4.0")
-    //testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.4.0")
 }
 
 dependencyManagement {
@@ -51,22 +49,26 @@ tasks.withType<Test> {
 }
 
 tasks.register<Exec>("dTestNetwork") {
-  commandLine("docker", "network", "create", "--driver", "bridge",
-  System.getenv("JONET_API_TEST_NET_NAME"))
+  commandLine("docker", "network", "create",
+    "--driver", "bridge",
+    System.getenv("JONET_API_TEST_NET_NAME"))
 }
 
 tasks.register<Exec>("dbuild") {
-  commandLine("docker", "build", "-t", System.getenv("JONET_API_IMAGE_REGISTRY"), ".")
+  commandLine("docker", "build",
+    "-t", System.getenv("JONET_API_IMAGE_REGISTRY"),
+    ".")
 }
 
 tasks.register("ddynamo") {
   dependsOn("dTestNetwork")
-  val portMapping = StringBuilder().append(System.getenv("JONET_API_TEST_USERS_DB_PORT")).append(":8000")
-    .toString()
+
   doLast {
-    ProcessBuilder().command("docker", "run", "--name", System.getenv("JONET_API_TEST_USERS_DB_HOST_NAME"), "-p",
-    portMapping, "--network", System.getenv("JONET_API_TEST_NET_NAME"),
-    "amazon/dynamodb-local").start()
+    ProcessBuilder().command("docker", "run",
+      "--name", System.getenv("JONET_API_TEST_USERS_DB_HOST_NAME"),
+      "--network", System.getenv("JONET_API_TEST_NET_NAME"),
+      "amazon/dynamodb-local")
+      .start()
   }
 }
 
@@ -74,25 +76,40 @@ tasks.register<Exec>("dtest") {
   dependsOn("dTestNetwork")
   dependsOn("dbuild")
   dependsOn("ddynamo")
-  val jonetUsersDbName = StringBuilder().append("JONET_API_USERS_DB_NAME=").append(environment["JONET_API_USERS_DB_NAME"])
+
+  // Construct key-value pairs for passing in environment variables
   val jonetPort = StringBuilder().append("JONET_API_PORT=").append(environment["JONET_API_PORT"])
+  val jonetUsersDbName = StringBuilder().append("JONET_API_USERS_DB_NAME=")
+    .append(environment["JONET_API_USERS_DB_NAME"])
   val jonetTest = StringBuilder().append("JONET_API_TEST=").append(environment["JONET_API_TEST"])
+  val jonetTestUsersDbHostName = StringBuilder().append("JONET_API_TEST_USERS_DB_HOST_NAME=")
+    .append(environment["JONET_API_TEST_USERS_DB_HOST_NAME"])
+  val jonetTestUsersDbPort = StringBuilder().append("JONET_API_TEST_USERS_DB_PORT=")
+    .append(environment["JONET_API_TEST_USERS_DB_PORT"])
+
   val awsRegion = StringBuilder().append("AWS_REGION=").append(environment["AWS_REGION"])
   val awsAccessKeyId = StringBuilder().append("AWS_ACCESS_KEY_ID=")
     .append(environment["AWS_ACCESS_KEY_ID"])
   val awsSecretAccessKey = StringBuilder().append("AWS_SECRET_ACCESS_KEY=")
     .append(environment["AWS_SECRET_ACCESS_KEY"])
-  val jonetTestUsersDbPort = StringBuilder().append("JONET_API_TEST_USERS_DB_PORT=")
-    .append(environment["JONET_API_TEST_USERS_DB_PORT"])
-  val jonetTestUsersDbHostName = StringBuilder().append("JONET_API_TEST_USERS_DB_HOST_NAME=")
-    .append(environment["JONET_API_TEST_USERS_DB_HOST_NAME"])
+
+  // Construct the port mapping
   val portMapping = StringBuilder().append(environment["JONET_API_PORT"]).append(":")
     .append(environment["JONET_API_PORT"]).append("/tcp")
 
-  commandLine("docker", "run", "-e", jonetUsersDbName, "-e", jonetPort, "-e", awsRegion, "-e",
-  awsAccessKeyId, "-e", awsSecretAccessKey, "-e", jonetTestUsersDbPort, "-e", jonetTest,
-  "-e", jonetTestUsersDbHostName, "-p", portMapping, "--network", System.getenv("JONET_API_TEST_NET_NAME"),
-  System.getenv("JONET_API_IMAGE_REGISTRY"), "./gradlew", "build") 
+  commandLine("docker", "run",
+    "-e", jonetPort,
+    "-e", jonetUsersDbName,
+    "-e", jonetTest,
+    "-e", jonetTestUsersDbHostName,
+    "-e", jonetTestUsersDbPort,
+    "-e", awsRegion,
+    "-e", awsAccessKeyId,
+    "-e", awsSecretAccessKey,
+    "-p", portMapping,
+    "--network", System.getenv("JONET_API_TEST_NET_NAME"),
+    System.getenv("JONET_API_IMAGE_REGISTRY"),
+    "./gradlew", "build") 
 
   finalizedBy("dCleanup")
 }
