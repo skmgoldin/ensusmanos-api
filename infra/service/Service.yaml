@@ -21,7 +21,9 @@ Resources:
 
   ServiceTask:
     Type: AWS::CloudFormation::Stack
-    DependsOn: ComputeCluster
+    DependsOn:
+      - ComputeCluster
+      - AttachedResources
     Properties:
       TemplateURL: https://s3.us-east-2.amazonaws.com/054393190750-cloudformation-templates/jonet/service/ServiceTask.yaml
       Parameters:
