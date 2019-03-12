@@ -126,6 +126,6 @@ Resources:
         - Field: path-pattern
           Values: ["*"]
       ListenerArn:
-        Fn::ImportValue: !Sub '${StackName}:PublicListener'
+        Fn::ImportValue: !Sub '${StackName}:PublicHttpsListener'
       Priority: 100
 

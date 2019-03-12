@@ -3,6 +3,12 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   ImageUrl:
     Type: String
+  ApplicationDnsName:
+    Type: String
+  ServiceDnsPrepend:
+    Type: String
+  CertificateArn:
+    Type: String
 
 Resources:
   ComputeCluster:
@@ -11,6 +17,9 @@ Resources:
       TemplateURL: https://s3.us-east-2.amazonaws.com/054393190750-cloudformation-templates/jonet/service/ComputeCluster.yaml
       Parameters:
         StackName: !Ref 'AWS::StackName'
+        ApplicationDnsName: !Ref ApplicationDnsName
+        ServiceDnsPrepend: !Ref ServiceDnsPrepend
+        CertificateArn: !Ref CertificateArn
 
   AttachedResources:
     Type: AWS::CloudFormation::Stack
