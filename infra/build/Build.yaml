@@ -3,14 +3,14 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   RepositoryName:
     Type: String
-  ECRLifeCyclePolicy:
+  ECRLifecyclePolicy:
     Type: String
     Default:
       '
         {
           "rules": [
             {
-              "rulePriority": 0,
+              "rulePriority": 1,
               "description": "delete EXPIRED images after three days",
               "selection": {
                 "tagStatus": "tagged",
@@ -34,6 +34,8 @@ Resources:
     Type: AWS::ECR::Repository
     Properties: 
       RepositoryName: !Ref RepositoryName
+      LifecyclePolicy:
+        LifecyclePolicyText: !Ref ECRLifecyclePolicy
 
 Outputs:
   ImageRepository:
