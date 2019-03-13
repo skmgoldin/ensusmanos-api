@@ -1,21 +1,18 @@
 # JoNet API
 This is the API service for the JoNet project.
 
-# Environment variables
+# Developing
+You need Java and Docker. Run `. ./scripts/setEnvars.sh` to set environment variables with test
+values before doing anything else. Feel free to modify values in the setEnvars file as necessary.
 
-The project uses environment variables for configuration. You can set some sane defaults for these with the `setEnvars.sh` script.
+# Scripts
+The project has a bunch of useful scripts, both in gradle and in the `scripts` directory.
 
-|Variable|Remarks|
-|--:|---|
-|`JONET_API_ENV`|Generally should the active Git branch name, but "dev" is fine on a local machine|
-|`JONET_API_PORT`|The port the API service should run on|
-|`AWS_REGION`|The AWS region to put/find resources in|
-|`AWS_ACCESS_KEY_ID`||
-|`AWS_SECRET_ACCESS_KEY`||
-|`JONET_API_TEST`|If "true", override implicit AWS SDK resource endpoints with test endpoints|
-|`JONEST_TEST_USERS_DB_HOST_NAME`|Should be "localhost" when running outside of docker|
-|`JONET_API_TEST_USERS_DB_PORT`|Should be "8000" when running docker tests|
-|`JONET_API_TEST_NET_NAME`||
-|`JONET_API_IMAGE_REGISTRY`||
-
+`./gradlew run` runs the API server.
+`./gradlew test` runs the test suite.
+`./gradlew build` runs the test suite with code quality checks.
+`./scripts/dtests.sh` runs the test suite with code quality checks, in the docker environment.
+`./scripts/deployBuildInfra.sh` deploys the ECR and code pipeline for the project.
+`./scripts/deleteBuildInfra.sh` deletes the ECR and code pipeline for the project.
+`./scripts/publishImage.sh` creates a new application image, tags it, and pushes it to ECR.
 
