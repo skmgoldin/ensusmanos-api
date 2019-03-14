@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  ImageRepository:
+    Type: AWS::ECR::Repository
+    Properties: 
+      LifecyclePolicy:
+        LifecyclePolicyText:
+          '
+            {
+              "rules": [
+                {
+                  "rulePriority": 1,
+                  "description": "delete EXPIRED images after three days",
+                  "selection": {
+                    "tagStatus": "tagged",
+                    "tagPrefixList": [
+                      "EXPIRED"
+                    ],
+                    "countType": "sinceImagePushed",
+                    "countUnit": "days",
+                    "countNumber": 3
+                  },
+                  "action": {
+                    "type": "expire"
+                  }
+                }
+              ]
+            }
+          '
+
+Outputs:
+  EcrName:
+    Description: 'The name of the deployed ECR repository'
+    Value: !Ref ImageRepository
+

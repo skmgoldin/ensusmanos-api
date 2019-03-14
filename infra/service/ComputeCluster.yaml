@@ -5,11 +5,13 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   StackName:
     Type: String
-  ApplicationDnsName:
+  AppTld:
     Type: String
-  ServiceDnsPrepend:
+  ServiceName:
     Type: String
   CertificateArn:
+    Type: String
+  AppName:
     Type: String
 
 Mappings:
@@ -117,8 +119,8 @@ Resources:
       AliasTarget:
         DNSName: !GetAtt PublicLoadBalancer.DNSName
         HostedZoneId: !GetAtt PublicLoadBalancer.CanonicalHostedZoneID
-      HostedZoneName: !Sub '${ApplicationDnsName}.'
-      Name: !Sub '${ServiceDnsPrepend}.${ApplicationDnsName}'
+      HostedZoneName: !Sub '${AppName}.${AppTld}.'
+      Name: !Sub '${ServiceName}.${AppName}.${AppTld}'
       Type: A
   
   # Private network infrastructure
@@ -213,7 +215,7 @@ Resources:
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
-      Name: !Join ['-', [!Ref StackName, 'drop-1']]
+      Name: !Join ['-', [!Ref ServiceName, 'drop-1']]
       Port: 80
       Protocol: HTTP
       UnhealthyThresholdCount: 2

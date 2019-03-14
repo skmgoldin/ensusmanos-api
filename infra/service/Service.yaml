@@ -3,28 +3,53 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   ImageUrl:
     Type: String
-  ApplicationDnsName:
+    Description: 'URL of the docker image to be run'
+  AppTld:
     Type: String
-  ServiceDnsPrepend:
+    Description: 'The application DNS name. ensusmanos.net, for example.'
+  ServiceName:
     Type: String
+    Description: 'A subdomain under the application DNS name to run the service on. api.ensusmanos.net, for example.'
   CertificateArn:
+    Type: String
+    Description: 'ARN of a valid TLS certificate for the application DNS name and the service subdomain.'
+  AppName:
+    Type: String
+  ServiceEnv:
     Type: String
 
 Resources:
   ComputeCluster:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.us-east-2.amazonaws.com/054393190750-cloudformation-templates/jonet/service/ComputeCluster.yaml
+      TemplateURL:
+        Fn::Sub:
+          - 'https://s3.${AwsRegion}.amazonaws.com/${BucketName}/${ServiceName}/${ServiceEnv}/service-infra/ComputeCluster.yaml'
+          - AwsRegion:
+              Fn::ImportValue:
+                !Sub '${AppName}-AwsRegion'
+            BucketName:
+              Fn::ImportValue:
+                !Sub '${AppName}-ApplicationUtilityBucketName' 
       Parameters:
         StackName: !Ref 'AWS::StackName'
-        ApplicationDnsName: !Ref ApplicationDnsName
-        ServiceDnsPrepend: !Ref ServiceDnsPrepend
+        AppTld: !Ref AppTld
+        ServiceName: !Ref ServiceName
         CertificateArn: !Ref CertificateArn
+        AppName: !Ref AppName
 
   AttachedResources:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.us-east-2.amazonaws.com/054393190750-cloudformation-templates/jonet/service/AttachedResources.yaml
+      TemplateURL:
+        Fn::Sub:
+          - 'https://s3.${AwsRegion}.amazonaws.com/${BucketName}/${ServiceName}/${ServiceEnv}/service-infra/AttachedResources.yaml'
+          - AwsRegion:
+              Fn::ImportValue:
+                !Sub '${AppName}-AwsRegion'
+            BucketName:
+              Fn::ImportValue:
+                !Sub '${AppName}-ApplicationUtilityBucketName' 
       Parameters:
         StackName: !Ref 'AWS::StackName'
 
@@ -34,10 +59,18 @@ Resources:
       - ComputeCluster
       - AttachedResources
     Properties:
-      TemplateURL: https://s3.us-east-2.amazonaws.com/054393190750-cloudformation-templates/jonet/service/ServiceTask.yaml
+      TemplateURL:
+        Fn::Sub:
+          - 'https://s3.${AwsRegion}.amazonaws.com/${BucketName}/${ServiceName}/${ServiceEnv}/service-infra/ServiceTask.yaml'
+          - AwsRegion:
+              Fn::ImportValue:
+                !Sub '${AppName}-AwsRegion'
+            BucketName:
+              Fn::ImportValue:
+                !Sub '${AppName}-ApplicationUtilityBucketName' 
       Parameters:
         StackName: !Ref 'AWS::StackName' 
-        ServiceName: 'jonet-api'
+        ServiceName: 'ensusmanos-api'
         ImageUrl: !Ref ImageUrl
         ContainerPort: 80
         ServiceMemory: 512

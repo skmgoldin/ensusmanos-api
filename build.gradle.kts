@@ -62,7 +62,7 @@ tasks.withType<com.github.spotbugs.SpotBugsTask> {
 }
 
 application {
-    mainClassName = "sys.JoNet.Api"
+    mainClassName = "sys.esm.Api"
 }
 
 

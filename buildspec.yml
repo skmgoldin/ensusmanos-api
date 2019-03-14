@@ -1,0 +1,120 @@
+version: 0.2
+
+env:
+  variables:
+    ESM_API_TEST_NET_NAME: "xxx"
+    ESM_API_TEST_USERS_DB_HOST_NAME: "xxx"
+    ESM_API_PORT: "8080"
+
+phases:
+  install:
+    commands:
+      - apt-add-repository ppa:duggan/jo --yes
+      - apt-get update -q
+      - apt-get install -y jq jo
+      - docker pull amazon/dynamodb-local
+  pre_build:
+    commands:
+      - chmod +x gradlew
+      - >
+        AwsAccountId=$(aws cloudformation list-exports | \
+          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-AwsAccountId"})) | .Value' | \
+          sed 's/"//g')
+      - >
+        AwsRegion=$(aws cloudformation list-exports | \
+          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-AwsRegion"})) | .Value' | \
+          sed 's/"//g')
+      - >
+        EcrRepoName=$AwsAccountId.dkr.ecr.$AwsRegion.amazonaws.com/$(aws cloudformation list-exports | \
+          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-EcrRepositoryName"})) | .Value' | \
+          sed 's/"//g')
+      - >
+        UtilityBucket=$(aws cloudformation list-exports | \
+          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-ApplicationUtilityBucketName"})) | .Value' | \
+          sed 's/"//g')
+      - >
+        CertArn=$(aws cloudformation list-exports | \
+          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-ApplicationCertificateArn"})) | .Value' | \
+          sed 's/"//g')
+      - >
+        AppName=$(aws cloudformation list-exports | \
+          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-AppName"})) | .Value' | \
+          sed 's/"//g')
+      - >
+        AppTld=$(aws cloudformation list-exports | \
+          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-AppTld"})) | .Value' | \
+          sed 's/"//g')
+      - >
+        ServiceName=$(aws cloudformation list-exports | \
+          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-ServiceName"})) | .Value' | \
+          sed 's/"//g')
+      - >
+        ServiceEnv=$(aws cloudformation list-exports | \
+          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-ServiceEnv"})) | .Value' | \
+          sed 's/"//g')
+  build:
+    commands:
+      - docker build -t $EcrRepoName .
+      - echo creating docker network...
+      - >
+          docker network create
+          --driver bridge
+          $ESM_API_TEST_NET_NAME
+      - echo running test db...
+      - > 
+          docker run
+          --name $ESM_API_TEST_USERS_DB_HOST_NAME
+          --network $ESM_API_TEST_NET_NAME
+          amazon/dynamodb-local
+          > /dev/null 2>&1 &
+      - echo running tests...
+      - >
+          docker run
+          -e ESM_API_PORT=$ESM_API_PORT
+          -e ESM_API_USERS_DB_NAME=xxx
+          -e ESM_API_TEST=true
+          -e ESM_API_TEST_USERS_DB_HOST_NAME=$ESM_API_TEST_USERS_DB_HOST_NAME
+          -e ESM_API_TEST_USERS_DB_PORT=8000
+          -e AWS_REGION=xxx
+          -e AWS_ACCESS_KEY_ID=xxx
+          -e AWS_SECRET_ACCESS_KEY=xxx
+          -p $ESM_API_PORT:$ESM_API_PORT
+          --network $ESM_API_TEST_NET_NAME
+          $EcrRepoName ./gradlew build
+      - echo removing test db...
+      - >
+          docker kill
+          $ESM_API_TEST_USERS_DB_HOST_NAME
+      - echo removing stale resources...
+      - docker system prune -f
+  post_build:
+    commands:
+      - echo pushing infra templates to s3
+      - >
+          aws s3 cp
+          --recursive
+          --exclude *.swp
+          infra/service
+          s3://$UtilityBucket/$ServiceName/$ServiceEnv/service-infra
+      - echo getting ECR login credentials
+      - $(aws ecr get-login --region $AwsRegion --no-include-email)
+      - echo creating image tag
+      - export ESM_API_LATEST_IMAGE_TAG="$(date +%Z-%Y.%m.%d-%H.%M.%S)"
+      - echo created image tag $ESM_API_LATEST_IMAGE_TAG
+      - echo tagging build with release tag
+      - >
+          docker tag
+          $EcrRepoName:latest
+          $EcrRepoName:$ESM_API_LATEST_IMAGE_TAG
+      - echo pushing build to ECR
+      - docker push $EcrRepoName
+      - echo generating template config
+      - jo Parameters=$(jo ImageUrl=$EcrRepoName:$ESM_API_LATEST_IMAGE_TAG AppTld=$AppTld ServiceName=$ServiceName CertificateArn=$CertArn AppName=$AppName ServiceEnv=$ServiceEnv) > TemplateConfig.json
+      - cat TemplateConfig.json
+
+artifacts:
+  files:
+    - TemplateConfig.json
+    - infra/service/Service.yaml
+  discard-paths: yes
+

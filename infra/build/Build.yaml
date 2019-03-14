@@ -1,43 +1,80 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  RepositoryName:
+  AppName:
     Type: String
-  ECRLifecyclePolicy:
+  GithubRepoName:
     Type: String
-    Default:
-      '
-        {
-          "rules": [
-            {
-              "rulePriority": 1,
-              "description": "delete EXPIRED images after three days",
-              "selection": {
-                "tagStatus": "tagged",
-                "tagPrefixList": [
-                  "EXPIRED"
-                ],
-                "countType": "sinceImagePushed",
-                "countUnit": "days",
-                "countNumber": 3
-              },
-              "action": {
-                "type": "expire"
-              }
-            }
-          ]
-        }
-      '
+  GithubRepoBranch:
+    Type: String
+  GithubToken:
+    Type: String
+  GithubUser:
+    Type: String
+  ServiceStackName:
+    Type: String
+  ServiceName:
+    Type: String
+  ServiceEnv:
+    Type: String
 
 Resources:
-  ImageRepository:
-    Type: AWS::ECR::Repository
-    Properties: 
-      RepositoryName: !Ref RepositoryName
-      LifecyclePolicy:
-        LifecyclePolicyText: !Ref ECRLifecyclePolicy
+  Ecr:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+        - 'https://s3.${AwsRegion}.amazonaws.com/${BucketName}/${ServiceName}/${ServiceEnv}/build-infra/Ecr.yaml'
+        - AwsRegion:
+            Fn::ImportValue:
+              !Sub '${AppName}-AwsRegion'
+          BucketName:
+            Fn::ImportValue:
+              !Sub '${AppName}-ApplicationUtilityBucketName' 
+
+  Pipeline:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+        - 'https://s3.${AwsRegion}.amazonaws.com/${BucketName}/${ServiceName}/${ServiceEnv}/build-infra/Pipeline.yaml'
+        - AwsRegion:
+            Fn::ImportValue:
+              !Sub '${AppName}-AwsRegion'
+          BucketName:
+            Fn::ImportValue:
+              !Sub '${AppName}-ApplicationUtilityBucketName' 
+      Parameters:
+        GithubRepoName: !Ref GithubRepoName
+        GithubRepoBranch: !Ref GithubRepoBranch
+        GithubToken: !Ref GithubToken
+        GithubUser: !Ref GithubUser 
+        EcrName: 
+          Fn::GetAtt:
+            - Ecr
+            - Outputs.EcrName
+        ServiceStackName: !Ref ServiceStackName
+        UtilityBucket:
+          Fn::ImportValue:
+            !Sub '${AppName}-ApplicationUtilityBucketName'
 
 Outputs:
-  ImageRepository:
-    Value: !Ref ImageRepository
+  EcrRepositoryName:
+    Description: 'Name of the ECR repository deployed for the build pipeline'
+    Value:
+      Fn::GetAtt:
+        - Ecr
+        - Outputs.EcrName
+    Export:
+      Name: !Sub '${AppName}-EcrRepositoryName'
+  ServiceName:
+    Description: 'The name of the service. Will alse be the subdomain under the application DNS name to run the service on. api.ensusmanos.net, for example.'
+    Value: !Ref ServiceName
+    Export:
+      Name: !Sub '${AppName}-ServiceName'
+  ServiceEnv:
+    Description: 'The service environment. master==production.'
+    Value: !Ref ServiceEnv
+    Export:
+      Name: !Sub '${AppName}-ServiceEnv'
 

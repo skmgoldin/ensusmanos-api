@@ -38,15 +38,15 @@ Resources:
           PortMappings:
             - ContainerPort: !Ref ContainerPort
           Environment:
-            - Name: JONET_API_PORT
+            - Name: ESM_API_PORT
               Value: !Ref ContainerPort
-            - Name: JONET_API_USERS_DB_NAME
+            - Name: ESM_API_USERS_DB_NAME
               Value: 
                 Fn::ImportValue: !Sub '${StackName}:UsersDatabase'
-            - Name: JONET_API_SYSTEM_KEY_ARN
+            - Name: ESM_API_SYSTEM_KEY_ARN
               Value:
                 Fn::ImportValue: !Sub '${StackName}:SystemKey'
-            - Name: JONET_API_TEST
+            - Name: ESM_API_TEST
               Value: false
 
   # IAM policy for the ECS task
