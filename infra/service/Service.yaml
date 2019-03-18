@@ -10,15 +10,26 @@ Parameters:
   ServiceName:
     Type: String
     Description: 'A subdomain under the application DNS name to run the service on. api.ensusmanos.net, for example.'
-  CertificateArn:
-    Type: String
-    Description: 'ARN of a valid TLS certificate for the application DNS name and the service subdomain.'
   AppName:
     Type: String
   ServiceEnv:
     Type: String
 
+Conditions:
+  IsProd: !Equals [!Ref ServiceEnv, master]
+
 Resources:
+  ApplicationCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Description: 'A TLS certificate covering the application domain'
+    Properties:
+      DomainName: 
+        Fn::If:
+          - IsProd
+          - !Sub '${ServiceName}.${AppName}.${AppTld}'
+          - !Sub '${ServiceEnv}.${ServiceName}.${AppName}.${AppTld}'
+      ValidationMethod: DNS
+
   ComputeCluster:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -33,7 +44,7 @@ Resources:
                 !Sub '${AppName}-ApplicationUtilityBucketName' 
       Parameters:
         StackName: !Ref 'AWS::StackName'
-        CertificateArn: !Ref CertificateArn
+        CertificateArn: !Ref ApplicationCertificate
 
   AttachedResources:
     Type: AWS::CloudFormation::Stack

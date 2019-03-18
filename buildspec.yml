@@ -33,10 +33,6 @@ phases:
           jq -c '.[] | .[] | select(contains({Name: "ensusmanos-ApplicationUtilityBucketName"})) | .Value' | \
           sed 's/"//g')
       - >
-        CertArn=$(aws cloudformation list-exports | \
-          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-ApplicationCertificateArn"})) | .Value' | \
-          sed 's/"//g')
-      - >
         AppName=$(aws cloudformation list-exports | \
           jq -c '.[] | .[] | select(contains({Name: "ensusmanos-AppName"})) | .Value' | \
           sed 's/"//g')
@@ -109,7 +105,7 @@ phases:
       - echo pushing build to ECR
       - docker push $EcrRepoName
       - echo generating template config
-      - jo Parameters=$(jo ImageUrl=$EcrRepoName:$ESM_API_LATEST_IMAGE_TAG AppTld=$AppTld ServiceName=$ServiceName CertificateArn=$CertArn AppName=$AppName ServiceEnv=$ServiceEnv) > TemplateConfig.json
+      - jo Parameters=$(jo ImageUrl=$EcrRepoName:$ESM_API_LATEST_IMAGE_TAG AppTld=$AppTld ServiceName=$ServiceName AppName=$AppName ServiceEnv=$ServiceEnv) > TemplateConfig.json
       - cat TemplateConfig.json
 
 artifacts:
