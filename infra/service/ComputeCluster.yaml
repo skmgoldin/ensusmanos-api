@@ -5,13 +5,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   StackName:
     Type: String
-  AppTld:
-    Type: String
-  ServiceName:
-    Type: String
   CertificateArn:
-    Type: String
-  AppName:
     Type: String
 
 Mappings:
@@ -111,17 +105,6 @@ Resources:
     Properties:
       SubnetId: !Ref PublicSubnetOne
       RouteTableId: !Ref PublicRouteTable
-
-  # Point api.ensusmanos.net to the ALB
-  DNS:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      AliasTarget:
-        DNSName: !GetAtt PublicLoadBalancer.DNSName
-        HostedZoneId: !GetAtt PublicLoadBalancer.CanonicalHostedZoneID
-      HostedZoneName: !Sub '${AppName}.${AppTld}.'
-      Name: !Sub '${ServiceName}.${AppName}.${AppTld}'
-      Type: A
   
   # Private network infrastructure
   NatGatewayZeroAttachment:
@@ -215,7 +198,7 @@ Resources:
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
-      Name: !Join ['-', [!Ref ServiceName, 'drop-1']]
+      Name: dummy-target-group
       Port: 80
       Protocol: HTTP
       UnhealthyThresholdCount: 2
@@ -317,6 +300,11 @@ Outputs:
     Value: !Join ['', ['http://', !GetAtt 'PublicLoadBalancer.DNSName']]
     Export:
       Name: !Join [ ':', [ !Ref StackName, 'ExternalUrl' ] ]
+  HostedZoneId:
+    Description: The canonical hosted zone ID of the load balancer
+    Value: !GetAtt PublicLoadBalancer.CanonicalHostedZoneID
+    Export:
+      Name: !Join [ ':', [ !Ref StackName, 'HostedZoneId' ] ]
   ECSRole:
     Description: The ARN of the ECS role
     Value: !GetAtt 'ECSRole.Arn'

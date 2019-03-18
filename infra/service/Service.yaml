@@ -33,10 +33,7 @@ Resources:
                 !Sub '${AppName}-ApplicationUtilityBucketName' 
       Parameters:
         StackName: !Ref 'AWS::StackName'
-        AppTld: !Ref AppTld
-        ServiceName: !Ref ServiceName
         CertificateArn: !Ref CertificateArn
-        AppName: !Ref AppName
 
   AttachedResources:
     Type: AWS::CloudFormation::Stack
@@ -76,4 +73,25 @@ Resources:
         ServiceMemory: 512
         ServiceCpu: 256
         DesiredCount: 2
+
+  Dns:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+          - 'https://s3.${AwsRegion}.amazonaws.com/${BucketName}/${ServiceName}/${ServiceEnv}/service-infra/Dns.yaml'
+          - AwsRegion:
+              Fn::ImportValue:
+                !Sub '${AppName}-AwsRegion'
+            BucketName:
+              Fn::ImportValue:
+                !Sub '${AppName}-ApplicationUtilityBucketName' 
+      Parameters:
+        AppTld: !Ref AppTld
+        ServiceName: !Ref ServiceName
+        AppName: !Ref AppName
+        StackName: !Ref AWS::StackName
+        AliasTargetDnsName: !GetAtt ComputeCluster.Outputs.ExternalUrl
+        AliasTargetHostedZoneId: !GetAtt ComputeCluster.Outputs.HostedZoneId
+        ServiceEnv: !Ref ServiceEnv
 

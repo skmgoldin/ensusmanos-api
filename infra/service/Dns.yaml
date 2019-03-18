@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters: 
+  AppName:
+    Type: String
+  AppTld:
+    Type: String
+  ServiceName:
+    Type: String
+  AliasTargetDnsName:
+    Type: String
+  AliasTargetHostedZoneId:
+    Type: String
+
+Resources:
+  Dns:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      AliasTarget:
+        DNSName: !Ref AliasTargetDnsName
+        HostedZoneId: !Ref AliasTargetHostedZoneId
+      HostedZoneName: !Sub '${AppName}.${AppTld}.'
+      Name: !Sub '${ServiceName}.${AppName}.${AppTld}'
+      Type: A
+
