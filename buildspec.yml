@@ -16,6 +16,7 @@ phases:
   pre_build:
     commands:
       - chmod +x gradlew
+      - ServiceEnv=$(echo $CODEBUILD_INITIATOR | sed 's/^.*@@@//')
       - >
         AwsAccountId=$(aws cloudformation list-exports | \
           jq -c '.[] | .[] | select(contains({Name: "ensusmanos-AwsAccountId"})) | .Value' | \
@@ -23,10 +24,6 @@ phases:
       - >
         AwsRegion=$(aws cloudformation list-exports | \
           jq -c '.[] | .[] | select(contains({Name: "ensusmanos-AwsRegion"})) | .Value' | \
-          sed 's/"//g')
-      - >
-        EcrRepoName=$AwsAccountId.dkr.ecr.$AwsRegion.amazonaws.com/$(aws cloudformation list-exports | \
-          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-EcrRepositoryName"})) | .Value' | \
           sed 's/"//g')
       - >
         UtilityBucket=$(aws cloudformation list-exports | \
@@ -42,11 +39,11 @@ phases:
           sed 's/"//g')
       - >
         ServiceName=$(aws cloudformation list-exports | \
-          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-ServiceName"})) | .Value' | \
+          jq -c --arg searchValue ensusmanos:api:$ServiceEnv:ServiceName '.[] | .[] | select(contains({Name: $searchValue})) | .Value' | \
           sed 's/"//g')
       - >
-        ServiceEnv=$(aws cloudformation list-exports | \
-          jq -c '.[] | .[] | select(contains({Name: "ensusmanos-ServiceEnv"})) | .Value' | \
+        EcrRepoName=$AwsAccountId.dkr.ecr.$AwsRegion.amazonaws.com/$(aws cloudformation list-exports | \
+          jq -c --arg searchValue ensusmanos:api:$ServiceEnv:EcrRepositoryName '.[] | .[] | select(contains({Name: $searchValue})) | .Value' | \
           sed 's/"//g')
   build:
     commands:

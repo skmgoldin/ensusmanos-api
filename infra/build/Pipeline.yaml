@@ -39,7 +39,7 @@ Resources:
     DependsOn: 
       - CodeBuild
     Properties:
-      Name: !Sub '${AWS::StackName}::${ServiceEnv}'
+      Name: !Sub '${AWS::StackName}@@@${ServiceEnv}'
       ArtifactStore:
         Location: !Ref UtilityBucket
         Type: S3
