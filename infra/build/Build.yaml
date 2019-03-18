@@ -57,6 +57,7 @@ Resources:
         UtilityBucket:
           Fn::ImportValue:
             !Sub '${AppName}-ApplicationUtilityBucketName'
+        ServiceEnv: !Ref ServiceEnv
 
 Outputs:
   EcrRepositoryName:

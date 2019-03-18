@@ -15,6 +15,8 @@ Parameters:
     Type: String
   UtilityBucket:
     Type: String
+  ServiceEnv:
+    Type: String
 
 Resources:
   CodeBuild:
@@ -37,7 +39,7 @@ Resources:
     DependsOn: 
       - CodeBuild
     Properties:
-      Name: !Sub '${AWS::StackName}-pipeline'
+      Name: !Sub '${AWS::StackName}::${ServiceEnv}'
       ArtifactStore:
         Location: !Ref UtilityBucket
         Type: S3
