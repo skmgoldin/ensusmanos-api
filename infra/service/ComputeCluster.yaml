@@ -297,7 +297,7 @@ Outputs:
       Name: !Join [ ':', [ !Ref StackName, 'ClusterName' ] ]
   ExternalUrl:
     Description: The url of the external load balancer
-    Value: !Join ['', ['http://', !GetAtt 'PublicLoadBalancer.DNSName']]
+    Value: !GetAtt PublicLoadBalancer.DNSName
     Export:
       Name: !Join [ ':', [ !Ref StackName, 'ExternalUrl' ] ]
   HostedZoneId:

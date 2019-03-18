@@ -11,6 +11,11 @@ Parameters:
     Type: String
   AliasTargetHostedZoneId:
     Type: String
+  ServiceEnv:
+    Type: String
+
+Conditions:
+  IsProd: !Equals [!Ref ServiceEnv, master]
 
 Resources:
   Dns:
@@ -20,6 +25,10 @@ Resources:
         DNSName: !Ref AliasTargetDnsName
         HostedZoneId: !Ref AliasTargetHostedZoneId
       HostedZoneName: !Sub '${AppName}.${AppTld}.'
-      Name: !Sub '${ServiceName}.${AppName}.${AppTld}'
+      Name:
+        Fn::If:
+          - IsProd
+          - !Sub '${ServiceName}.${AppName}.${AppTld}'
+          - !Sub '${ServiceEnv}.${ServiceName}.${AppName}.${AppTld}'
       Type: A
 

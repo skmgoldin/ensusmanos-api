@@ -90,7 +90,6 @@ Resources:
         AppTld: !Ref AppTld
         ServiceName: !Ref ServiceName
         AppName: !Ref AppName
-        StackName: !Ref AWS::StackName
         AliasTargetDnsName: !GetAtt ComputeCluster.Outputs.ExternalUrl
         AliasTargetHostedZoneId: !GetAtt ComputeCluster.Outputs.HostedZoneId
         ServiceEnv: !Ref ServiceEnv
