@@ -110,7 +110,6 @@ Resources:
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 2
       TargetType: ip
-      Name: !Ref ServiceName
       Port: !Ref ContainerPort
       Protocol: HTTP
       VpcId:

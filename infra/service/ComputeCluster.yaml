@@ -198,7 +198,6 @@ Resources:
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
-      Name: dummy-target-group
       Port: 80
       Protocol: HTTP
       UnhealthyThresholdCount: 2
