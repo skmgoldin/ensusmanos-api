@@ -15,9 +15,7 @@ aws ecr batch-delete-image \
 echo deleting associated service stack $ESM_API_SERVICE_STACK_NAME
 aws cloudformation delete-stack \
   --stack-name $ESM_API_SERVICE_STACK_NAME
-aws cloudformation describe-stacks \
-  --stack-name $ESM_API_SERVICE_STACK_NAME
-while [ 0 -lt $? ]
+while [ $? -eq 0 ]
 do
   aws cloudformation describe-stacks \
     --stack-name $ESM_API_SERVICE_STACK_NAME
