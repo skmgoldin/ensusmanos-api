@@ -66,15 +66,15 @@ Outputs:
         - Ecr
         - Outputs.EcrName
     Export:
-      Name: !Sub '${AppName}-EcrRepositoryName'
+      Name: !Sub '${AppName}:${ServiceName}:${ServiceEnv}:EcrRepositoryName'
   ServiceName:
     Description: 'The name of the service. Will alse be the subdomain under the application DNS name to run the service on. api.ensusmanos.net, for example.'
     Value: !Ref ServiceName
     Export:
-      Name: !Sub '${AppName}-ServiceName'
+      Name: !Sub '${AppName}:${ServiceName}:${ServiceEnv}:ServiceName'
   ServiceEnv:
     Description: 'The service environment. master==production.'
     Value: !Ref ServiceEnv
     Export:
-      Name: !Sub '${AppName}-ServiceEnv'
+      Name: !Sub '${AppName}:${ServiceName}:${ServiceEnv}:ServiceEnv'
 
